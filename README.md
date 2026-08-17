@@ -214,7 +214,7 @@ Os arquivos e as instruções abaixo permitem repetir a validação em uma esta�
 | `requirements.txt` | Lista das bibliotecas necessárias. |
 | `requirements-dev.txt` | Dependências para executar os testes. |
 | `tests/` | Testes automatizados de memória e interface. |
-| `knowledge_base/` | Fontes Markdown autorizadas para o piloto RAG local. |
+| `Analise/docsgeo/` | Dez fontes Markdown curadas e autorizadas para o piloto RAG local. |
 | `.env` | Configuração local da `OPENAI_API_KEY`; não deve ser versionado. |
 | `.env.example` | Modelo seguro do nome da variável, sem chave real. |
 | `.gitignore` | Proteção contra inclusão acidental do `.env` e do ambiente virtual. |

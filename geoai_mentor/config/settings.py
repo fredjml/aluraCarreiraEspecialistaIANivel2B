@@ -16,7 +16,7 @@ class Settings:
     model_name: str = "gpt-5.6-sol"
     temperature: float = 0.7
     database_path: str = "data/geoai_mentor.db"
-    knowledge_path: str = "knowledge_base"
+    knowledge_path: str = "Analise/docsgeo"
     request_timeout: float = 30.0
     max_output_tokens: int = 1200
     retention_days: int = 90
@@ -43,7 +43,7 @@ class Settings:
         ).strip()
         if not database_path:
             raise ConfigurationError("GEOAI_DATABASE_PATH não pode estar vazio.")
-        knowledge_path = os.getenv("GEOAI_KNOWLEDGE_PATH", "knowledge_base").strip()
+        knowledge_path = os.getenv("GEOAI_KNOWLEDGE_PATH", "Analise/docsgeo").strip()
         if not knowledge_path:
             raise ConfigurationError("GEOAI_KNOWLEDGE_PATH não pode estar vazio.")
         try:

@@ -4,21 +4,21 @@ from geoai_mentor.infrastructure.local_knowledge import LocalMarkdownKnowledgeRe
 
 
 def test_recupera_fonte_pertinente_para_python() -> None:
-    retriever = LocalMarkdownKnowledgeRetriever("knowledge_base")
+    retriever = LocalMarkdownKnowledgeRetriever("Analise/docsgeo")
 
-    resultados = retriever.buscar("Qual projeto de portfólio posso fazer com Python?")
+    resultados = retriever.buscar("Como aprender funções, módulos e exceções em Python?")
 
     assert resultados
-    assert resultados[0].source == "trilha_python_geociencias.md"
-    assert any("portfólio" in item.content.lower() for item in resultados)
+    assert resultados[0].source == "01_python_fundamentos.md"
+    assert any("funções" in item.content.lower() for item in resultados)
 
 
 def test_nao_inventa_evidencia_fora_da_base() -> None:
-    retriever = LocalMarkdownKnowledgeRetriever("knowledge_base", min_score=0.2)
+    retriever = LocalMarkdownKnowledgeRetriever("Analise/docsgeo", min_score=0.2)
 
     assert retriever.buscar("Qual é a previsão meteorológica de Saturno?") == []
 
 
 def test_diretorio_inexistente_e_consulta_vazia_nao_recuperam() -> None:
     assert LocalMarkdownKnowledgeRetriever("diretorio-inexistente").buscar("python") == []
-    assert LocalMarkdownKnowledgeRetriever("knowledge_base").buscar("a e o") == []
+    assert LocalMarkdownKnowledgeRetriever("Analise/docsgeo").buscar("a e o") == []
