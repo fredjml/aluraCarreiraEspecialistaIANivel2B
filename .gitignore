@@ -28,3 +28,9 @@ backups/
 
 # Arquivos temporários do Microsoft Office
 ~$*.docx
+
+# Artefatos temporários de renderização de documentos
+.docx_render/
+.docx_render_libreoffice/
+.libreoffice_test/
+.lo_validation_profile_*/
