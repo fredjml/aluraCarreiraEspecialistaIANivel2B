@@ -266,3 +266,267 @@ Os detalhes, decisões, correções e evidências de cada etapa estão em:
 
 - `Analise/RegistroPassoAPasso_Implementacao_GeoAI_Mentor.docx`;
 - `Analise/RelatorioExecutivoConsolidado_GeoAI_Mentor.docx`.
+
+---
+
+## Manual do usuário — GeoAI Mentor
+
+Guia de instalação, execução, testes, validação e operação local da prova de
+conceito. Versão 1.0, de 17 de agosto de 2026, com início do piloto previsto
+para 24 de agosto de 2026.
+
+> **Escopo:** POC para dois participantes. O ambiente local está funcional;
+> Microsoft Entra ID, Azure App Service e Azure Database for PostgreSQL fazem
+> parte da próxima implantação e ainda não estão provisionados.
+
+> **Importante:** o GeoAI Mentor produz orientação assistida por IA. As
+> respostas não devem ser usadas como decisão técnica, profissional ou
+> institucional sem revisão humana.
+
+### 1. Antes de começar
+
+O manual orienta participantes e responsáveis pela POC na instalação,
+execução, validação e operação básica do GeoAI Mentor. Ele consolida o registro
+da implementação evolutiva e o roteiro de testes e custos do ambiente.
+
+#### O que já funciona
+
+- Interface web Streamlit e versão de terminal.
+- Conversas persistidas em SQLite: criar, listar, reabrir, renomear e excluir.
+- Memória por conversa, com isolamento entre identificadores.
+- RAG lexical local com dez fontes Markdown curadas em `Analise/docsgeo`.
+- Retenção configurável, backup local, limites da API e logs redigidos.
+- 49 testes automatizados aprovados e cobertura total de 88,50%.
+
+#### O que ainda não está disponível
+
+- Login pelo Microsoft Entra ID e separação persistente por usuário autenticado.
+- Publicação no Azure App Service e banco Azure Database for PostgreSQL.
+- Bloqueio financeiro integral somando Azure e OpenAI.
+- Piloto real com os dois geocientistas e avaliação final das fontes institucionais.
+
+### 2. Preparar o ambiente
+
+#### Pré-requisitos
+
+- Windows com PowerShell.
+- Python 3.12 recomendado.
+- Chave válida da API OpenAI para testes com respostas reais.
+- Acesso à pasta `E:\ProjAlura`.
+
+#### Configuração inicial
+
+1. Abra o PowerShell na pasta `E:\ProjAlura`.
+2. Ative o ambiente virtual.
+3. Instale as dependências de desenvolvimento.
+4. Copie `.env.example` para `.env` e preencha somente a chave local.
+
+```powershell
+cd E:\ProjAlura
+.venv\Scripts\Activate.ps1
+pip install -r requirements-dev.txt
+Copy-Item .env.example .env
+```
+
+#### Variáveis principais
+
+| Variável | Finalidade / padrão |
+|---|---|
+| `OPENAI_API_KEY` | Obrigatória para respostas reais; nunca versionar. |
+| `OPENAI_MODEL` | Modelo de texto; padrão atual: `gpt-5.6-sol`. |
+| `GEOAI_DATABASE_PATH` | Banco local; padrão: `data/geoai_mentor.db`. |
+| `GEOAI_KNOWLEDGE_PATH` | Base RAG; padrão: `Analise/docsgeo`. |
+| `OPENAI_REQUEST_TIMEOUT` | Tempo limite da chamada; padrão: 30 segundos. |
+| `OPENAI_MAX_OUTPUT_TOKENS` | Máximo de saída; padrão: 1.200 tokens. |
+| `GEOAI_RETENTION_DAYS` | Retenção local; padrão aprovado: 90 dias. |
+
+> **Segurança:** nunca cole a chave em código, captura de tela, relatório,
+> mensagem ou Git. Se houver exposição, revogue-a e crie outra.
+
+### 3. Testar antes de usar
+
+A suíte padrão usa substitutos controlados e não realiza chamadas reais à
+OpenAI. Portanto, executar apenas o pytest não gera custo de API.
+
+```powershell
+python -m pytest -q
+```
+
+| Critério | Resultado esperado |
+|---|---|
+| Testes | 49 aprovados. |
+| Cobertura | Pelo menos 85%; última medição: 88,50%. |
+| API real | Nenhuma chamada nos testes padrão. |
+| Concorrência | 12 gravações em 4 workers, isoladas e completas. |
+
+Para abrir a interface:
+
+```powershell
+streamlit run streamlit_app.py
+```
+
+O navegador deverá abrir automaticamente. Caso isso não ocorra, use o endereço
+local exibido no PowerShell, normalmente `http://localhost:8501`.
+
+### 4. Usar o GeoAI Mentor
+
+1. Digite uma pergunta no campo de chat e envie.
+2. Aguarde a resposta; chamadas reais podem consumir a API.
+3. Faça uma pergunta complementar para verificar se o contexto foi preservado.
+4. Confira as fontes quando a resposta utilizar a base RAG.
+
+> **Exemplo de memória:** pergunte qual linguagem aprender primeiro e, em
+> seguida, pergunte “Que projeto posso criar com essa linguagem?”. A segunda
+> resposta deve compreender a referência anterior.
+
+#### Gerenciar conversas
+
+| Ação | Como usar |
+|---|---|
+| Nova conversa | Use o comando correspondente na barra lateral. |
+| Reabrir | Selecione uma conversa existente; o histórico volta à tela. |
+| Renomear | Altere o título para facilitar a localização. |
+| Excluir | Confirme a exclusão; as mensagens relacionadas são removidas em cascata. |
+
+#### Validar o RAG
+
+A recuperação pesquisa somente arquivos Markdown da pasta autorizada. Faça
+perguntas relacionadas aos dez documentos e confirme se a resposta identifica
+a fonte. Para assuntos sem evidência, o sistema deve informar a ausência de
+suporte sem inventar uma fonte.
+
+> **Limite conhecido:** a busca é lexical, local e adequada à POC. Os dez
+> documentos ainda precisam de aprovação institucional final antes de uso além
+> do piloto.
+
+### 5. Roteiro de validação da POC
+
+| Etapa | Ação | Critério de aceite |
+|---:|---|---|
+| 1 | Executar pytest. | 49 testes aprovados e cobertura igual ou superior a 85%. |
+| 2 | Abrir o Streamlit. | A tela carrega sem revelar segredo. |
+| 3 | Criar duas conversas. | Os históricos não se misturam. |
+| 4 | Reabrir e renomear. | O conteúdo e o novo título permanecem. |
+| 5 | Fazer pergunta coberta pelo RAG. | A resposta traz fonte pertinente. |
+| 6 | Perguntar fora da base. | O sistema declara falta de evidência. |
+| 7 | Excluir uma conversa. | A conversa e suas mensagens deixam de aparecer. |
+| 8 | Criar e verificar backup. | Um arquivo restaurável é criado em `backups/`. |
+
+#### Metas de feedback dos dois participantes
+
+- Utilidade percebida: média igual ou superior a 4/5.
+- Clareza: média igual ou superior a 4/5.
+- Fontes corretas e presentes quando necessárias: pelo menos 90%.
+- Recusa adequada fora da base: pelo menos 90%.
+- Conclusão das tarefas: pelo menos 80%.
+- Zero exposição de segredo e zero acesso cruzado.
+
+### 6. Operação e manutenção local
+
+```powershell
+# Inspecionar o banco
+python scripts\operacoes_geoai.py status
+
+# Criar backup
+python scripts\operacoes_geoai.py backup
+
+# Aplicar retenção de 90 dias
+python scripts\operacoes_geoai.py retencao --dias 90
+```
+
+O backup consistente é gravado por padrão em `backups/` e fica fora do Git. O
+período aprovado para os backups da futura POC Azure é de 30 dias.
+
+> **Atenção:** a retenção exclui conversas cuja última atualização seja
+> anterior ao limite. Crie e verifique um backup antes da execução manual.
+
+#### Diagnóstico rápido
+
+| Sintoma | Verificação |
+|---|---|
+| Chave ausente | Confirme que `.env` existe e contém `OPENAI_API_KEY`, sem exibir o valor. |
+| Modelo não responde | Verifique internet, saldo, modelo permitido e timeout. |
+| RAG não encontra fonte | Confirme `GEOAI_KNOWLEDGE_PATH` e os arquivos `.md` em `Analise/docsgeo`. |
+| Histórico não aparece | Confirme `GEOAI_DATABASE_PATH` e a permissão de escrita na pasta `data`. |
+| Streamlit não abre | Leia a URL no terminal e confirme que a porta não está ocupada. |
+
+### 7. Custos e orçamento da POC
+
+O orçamento total aprovado é R$ 50 para Azure e OpenAI em conjunto. As
+estimativas variam com câmbio, impostos, tokens, tempo de execução e preços
+vigentes.
+
+| Componente / cenário | Estimativa | Observação |
+|---|---:|---|
+| Testes automatizados | R$ 0 de API | Usam substitutos e não chamam a OpenAI. |
+| App Service Linux F1 | R$ 0 | Sem SLA e com limites; apropriado apenas à POC. |
+| PostgreSQL B1ms por 14 dias | Aproximadamente R$ 29,50 mais armazenamento | Parar quando ocioso; o armazenamento continua cobrado. |
+| OpenAI Sol, 20 interações típicas | Aproximadamente R$ 4 | Exemplo com 3.000 tokens de entrada e 800 de saída. |
+| Margem de segurança | R$ 10 | Reserva de 20% do orçamento. |
+| Total de planejamento | Aproximadamente R$ 44–50 | Depende principalmente do banco e do uso real. |
+
+#### Economizar durante o piloto
+
+- Preferir `gpt-5.6-luna` quando a qualidade for suficiente.
+- Parar o PostgreSQL quando o piloto estiver inativo e remover os recursos ao encerrar.
+- Manter respostas curtas, limitar o histórico e acompanhar tokens por participante.
+- Usar alertas em 50%, 75%, 80%, 90% e 100% e bloquear novas chamadas OpenAI no teto interno de R$ 40.
+- Registrar todo o consumo mesmo quando créditos do Azure for Students evitarem desembolso direto.
+
+### 8. Evolução por portões
+
+| Portão | Situação | Entrega principal |
+|---:|---|---|
+| 0 | Aprovado | Linha de base e credencial fora do Git. |
+| 1 | Aprovado | Separação entre interface, aplicação, domínio, infraestrutura e configuração. |
+| 2 | Aprovado | SQLite transacional e isolamento por conversa. |
+| 3 | Aprovado | Cobertura mínima automatizada e testes sem API real. |
+| 4 | Aprovado | Gerenciamento completo das conversas. |
+| 5 | Aprovado para piloto | RAG local controlado, fontes e recusa sem evidência. |
+| 6 | Parcialmente aprovado | Prontidão técnica local concluída; validações externas pendentes. |
+
+#### Próxima implantação planejada
+
+| Decisão | Definição da POC |
+|---|---|
+| Identidade | Microsoft Entra ID em tenant único. |
+| Hospedagem | Azure App Service na região `eastus`. |
+| Persistência | Azure Database for PostgreSQL iniciado vazio. |
+| Participantes | Dois; as contas autorizadas ainda precisam ser definidas. |
+| Retenção | Conversas por 90 dias e backups por 30 dias. |
+| Responsável por alertas | `fredjml.br@gmail.com`. |
+| Início previsto | 24/08/2026. |
+
+> **Estado real:** a tabela registra decisões, não comprova implantação.
+> Autenticação, PostgreSQL, hospedagem e controle unificado de custos ainda
+> exigem implementação e provisionamento.
+
+### 9. Uso responsável e privacidade
+
+- Não inserir dados pessoais, confidenciais, estratégicos ou sujeitos a sigilo.
+- Revisar toda recomendação antes de usá-la em trabalho técnico ou decisão profissional.
+- Registrar feedback de forma anonimizada, conforme aprovado para a POC.
+- Excluir conversas de teste que não precisem ser preservadas.
+- Comunicar imediatamente suspeita de vazamento, acesso indevido ou gasto anormal ao responsável pelo piloto.
+
+#### Pendências antes do piloto hospedado
+
+- Definir as duas contas participantes e se o tenant inteiro ou apenas uma lista terá acesso.
+- Definir administrador, suporte, privacidade, incidentes e solicitações de exclusão.
+- Definir acesso administrativo ao PostgreSQL e destino autorizado dos backups.
+- Aprovar formalmente os dez documentos RAG e a regra de citação.
+- Definir duração, número de conversas e comportamento ao atingir o limite financeiro.
+
+### 10. Referências do manual
+
+- [OpenAI — gpt-5.6-sol](https://developers.openai.com/api/docs/models/gpt-5.6-sol)
+- [OpenAI — comparação de modelos](https://developers.openai.com/api/docs/models/text)
+- [Azure App Service Linux — preços](https://azure.microsoft.com/en-us/pricing/details/app-service/linux/)
+- [Azure — limites dos serviços](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/azure-subscription-service-limits)
+- [Azure Database for PostgreSQL — preços](https://azure.microsoft.com/pt-br/pricing/details/postgresql/flexible-server/)
+- [Azure Database for PostgreSQL — visão geral](https://learn.microsoft.com/en-us/azure/postgresql/overview)
+- [Azure for Students — acompanhamento de custos](https://learn.microsoft.com/en-us/azure/education-hub/navigate-costs)
+
+## Site do projeto no GitHub
+
+https://github.com/fredjml/aluraCarreiraEspecialistaIA
