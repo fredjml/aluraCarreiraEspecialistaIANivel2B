@@ -1,0 +1,16 @@
+# Segredos e configurações locais
+.env
+.env.*
+!.env.example
+
+# Ambiente virtual Python
+.venv/
+
+# Cache e bytecode Python
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Cache de ferramentas
+.uv-cache/
+tmp/
