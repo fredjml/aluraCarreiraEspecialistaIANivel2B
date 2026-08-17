@@ -14,3 +14,17 @@ __pycache__/
 # Cache de ferramentas
 .uv-cache/
 tmp/
+.pytest_cache/
+.pytest-tmp/
+.coverage
+htmlcov/
+pytest-cache-files-*/
+
+# Banco local de desenvolvimento
+data/*.db
+data/*.db-shm
+data/*.db-wal
+backups/
+
+# Arquivos temporários do Microsoft Office
+~$*.docx
