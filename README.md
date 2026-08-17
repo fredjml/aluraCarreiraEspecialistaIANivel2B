@@ -68,6 +68,27 @@ python scripts/operacoes_geoai.py retencao --dias 90
 
 Os backups são gravados em `backups/`, fora do Git. A retenção exclui conversas cuja última atualização seja anterior ao período informado.
 
+### Solução de problemas no PowerShell
+
+Se o terminal exibir `System.ArgumentOutOfRangeException` em
+`Microsoft.PowerShell.PSConsoleReadLine.ReallyRender` ao colar ou editar um
+comando, atualize o PSReadLine no escopo do usuário e reinicie o terminal:
+
+```powershell
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Scope CurrentUser -Force -ForceBootstrap
+Install-Module PSReadLine -Scope CurrentUser -Force -AllowClobber -Repository PSGallery
+```
+
+Para confirmar a versão carregada em uma nova sessão:
+
+```powershell
+Get-Module PSReadLine | Select-Object Name, Version, Path
+```
+
+Este projeto foi validado com PSReadLine 2.4.5; a versão 2.0.0 apresentou a
+falha de reposicionamento do cursor descrita acima.
+
 ### Arquitetura separada
 
 O projeto utiliza camadas com responsabilidades distintas:
