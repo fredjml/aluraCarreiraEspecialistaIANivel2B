@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import os
+import sys
 
 from dotenv import load_dotenv
+from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
+from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_openai import ChatOpenAI
 
 
@@ -21,6 +24,8 @@ PERGUNTAS = [
         "essa linguagem?"
     ),
 ]
+
+memoria_sessoes: dict[str, InMemoryChatMessageHistory] = {}
 
 
 def carregar_configuracao() -> None:
@@ -58,19 +63,48 @@ def criar_chain(modelo: ChatOpenAI) -> Runnable:
     return prompt | modelo | StrOutputParser()
 
 
-def executar_perguntas(chain: Runnable, perguntas: list[str]) -> None:
-    """Envia cada pergunta pela cadeia, ainda sem preencher o histórico."""
+def obter_historico_por_sessao(session_id: str) -> InMemoryChatMessageHistory:
+    """Obtém a instância única de histórico associada a uma sessão."""
+    if session_id not in memoria_sessoes:
+        memoria_sessoes[session_id] = InMemoryChatMessageHistory()
+
+    return memoria_sessoes[session_id]
+
+
+def criar_cadeia_com_memoria(chain: Runnable) -> RunnableWithMessageHistory:
+    """Envelopa a cadeia LCEL com gerenciamento de histórico por sessão."""
+    return RunnableWithMessageHistory(
+        runnable=chain,
+        get_session_history=obter_historico_por_sessao,
+        input_messages_key="query",
+        history_messages_key="historico",
+    )
+
+
+def executar_perguntas(
+    cadeia_com_memoria: RunnableWithMessageHistory,
+    perguntas: list[str],
+    session_id: str,
+) -> None:
+    """Envia as perguntas compartilhando o histórico da mesma sessão."""
     for pergunta in perguntas:
-        resposta = chain.invoke({"historico": [], "query": pergunta})
+        resposta = cadeia_com_memoria.invoke(
+            {"query": pergunta},
+            config={"configurable": {"session_id": session_id}},
+        )
         print(f"\nPergunta: {pergunta}")
         print(f"Resposta: {resposta}")
 
 
 def main() -> None:
     """Executa as duas perguntas de validação da conexão com a API."""
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+
     modelo = criar_modelo()
     chain = criar_chain(modelo)
-    executar_perguntas(chain, PERGUNTAS)
+    cadeia_com_memoria = criar_cadeia_com_memoria(chain)
+    executar_perguntas(cadeia_com_memoria, PERGUNTAS, session_id="sessao_demo")
 
 
 if __name__ == "__main__":
