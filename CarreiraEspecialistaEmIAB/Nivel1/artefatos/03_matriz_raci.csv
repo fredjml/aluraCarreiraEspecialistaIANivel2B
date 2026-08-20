@@ -1,0 +1,9 @@
+Atividade,Equipe de Vendas,Equipe de Pós-Vendas,Sistema N8N,Sistema de Correios,Liderança
+Registrar envio no handoff,R,A,C,I,I
+Notificar pós-vendas,C,A,R,I,I
+Confirmar entrega,I,A,C,R,I
+Enviar pesquisa de satisfação,I,A,R,C,I
+Classificar feedback,I,A,R,I,C
+Validar alerta de detrator,I,R,C,I,A
+Enviar agradecimento,I,A,R,I,C
+Manter política de SLA,C,R,I,C,A

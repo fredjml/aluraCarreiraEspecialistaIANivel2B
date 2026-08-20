@@ -1,0 +1,75 @@
+{
+  "name": "Hermex — NPS Automação",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Teste manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-720, 80]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{id_pedido:'P002',cliente:'Bruno Lima',email_cliente:'bruno.lima@email.com',nota_nps:4,comentario:'Produto chegou atrasado e com a caixa amassada'}}];"
+      },
+      "id": "sample",
+      "name": "Dados de teste fixados",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-500, 80]
+    },
+    {
+      "parameters": {
+        "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict" }, "conditions": [{ "leftValue": "={{ Number($json.nota_nps) }}", "rightValue": 6, "operator": { "type": "number", "operation": "lt" } }] }
+      },
+      "id": "if-detrator",
+      "name": "Nota menor que 6?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-260, 80]
+    },
+    {
+      "parameters": {
+        "jsCode": "const t=String($json.comentario||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase(); let categoria=/atras|demor|prazo|extravi|rastre/.test(t)?'Atraso':/defeit|quebrad|avari|produto errado/.test(t)?'Defeito':/atend|suporte|resposta|inform/.test(t)?'Atendimento':/embalag|caixa|amassad/.test(t)?'Embalagem':'Outro'; return [{json:{...$json,categoria,status:'AGUARDANDO_APROVACAO_HUMANA',destinatario:'fredbrhermex@gmail.com',assunto:`[Hermex] NPS detrator ${$json.id_pedido}`,corpo:`Cliente: ${$json.cliente}\\nNota: ${$json.nota_nps}\\nCategoria: ${categoria}\\nComentário: ${$json.comentario}`}}];"
+      },
+      "id": "classify",
+      "name": "Classificar e preparar alerta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [0, -40]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{...$json,status:'AGUARDANDO_APROVACAO_HUMANA',destinatario:$json.email_cliente,assunto:'Obrigado pelo feedback — Hermex Log',corpo:`Olá, ${$json.cliente}. Obrigado pelo seu feedback.`}}];"
+      },
+      "id": "thanks",
+      "name": "Preparar agradecimento",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [0, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(i=>({json:{...i.json,evidencia:'Mensagem preparada; envio bloqueado até aprovação humana'}}));"
+      },
+      "id": "approval",
+      "name": "Portão de aprovação humana",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [280, 80]
+    }
+  ],
+  "connections": {
+    "Teste manual": { "main": [[{ "node": "Dados de teste fixados", "type": "main", "index": 0 }]] },
+    "Dados de teste fixados": { "main": [[{ "node": "Nota menor que 6?", "type": "main", "index": 0 }]] },
+    "Nota menor que 6?": { "main": [[{ "node": "Classificar e preparar alerta", "type": "main", "index": 0 }], [{ "node": "Preparar agradecimento", "type": "main", "index": 0 }]] },
+    "Classificar e preparar alerta": { "main": [[{ "node": "Portão de aprovação humana", "type": "main", "index": 0 }]] },
+    "Preparar agradecimento": { "main": [[{ "node": "Portão de aprovação humana", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "2e3d0d7d-86be-47df-9fa1-1edb53ae8d8a",
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": []
+}

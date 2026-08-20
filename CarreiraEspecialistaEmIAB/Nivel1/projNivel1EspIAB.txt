@@ -1,0 +1,326 @@
+Desafio1-EspB:Nivel1
+Descrição do projeto
+A Hermex Log está passando por um momento de transformação digital. A diretoria identificou que a comunicação entre as equipes de vendas e pós-vendas é falha, 
+que reclamações de clientes não são tratadas de forma estruturada e que não existe um processo automatizado para coletar, classificar e analisar feedbacks. 
+Além disso, a equipe de atendimento perde tempo respondendo perguntas repetitivas sobre processos internos (devoluções, reembolsos, prazos) que já estão documentados, 
+mas ninguém consulta.
+A equipe que você integra recebeu a missão de:
+Planejar e criar um assistente GPT que auxilie a equipe comercial a padronizar a comunicação de prazos de entrega por região.
+Mapear o processo de pós-vendas (do envio do pedido até a pesquisa de satisfação), identificando pontos de automação e definindo responsabilidades com a Matriz RACI.
+Construir um workflow automatizado no n8n que colete respostas de NPS, classifique comentários com IA e notifique a equipe responsável.
+Montar um dashboard no Looker Studio com indicadores de NPS, SLA de entrega e distribuição regional, além de documentar a base de conhecimento no Notion para futura 
+integração com um chatbot.
+Os entregáveis esperados são: documentos de planejamento (bloco de notas), fluxograma de processo (Miro), Matriz RACI (Google Sheets), assistente GPT funcional, 
+workflow no n8n, dashboard no Looker Studio e base de conhecimento no Notion.
+Preparando o ambiente
+Pré-requisitos:
+Conta Google (para Google Sheets, Google Forms, Looker Studio e Gmail)
+Conta no ChatGPT Plus (para criação de GPTs customizados)
+Conta no n8n (n8n.cloud — plano gratuito é suficiente)
+Conta no Miro (plano gratuito)
+Conta no Notion (plano gratuito)
+Chave de API do Gemini (obtida em aistudio.google.com — plano gratuito)
+Bloco de notas ou editor de texto simples
+Instruções iniciais:
+Crie uma pasta no Google Drive chamada "Hermex Log — Projeto NPS".
+Dentro dela, crie uma planilha chamada handoff_vendas_posvenda e outra chamada pesquisa_satisfacao.
+No Miro, crie um board chamado "Hermex Log — Processos".
+No Notion, crie um workspace chamado "Hermex Log — Base de Conhecimento".
+No n8n, crie um projeto chamado "Hermex Log".
+Datasets:
+pesquisa_satisfacao.csv — Respostas simuladas de pesquisa NPS de clientes da Hermex Log
+id_pedido: identificador único do pedido (P001 a P060)
+cliente: nome fictício da pessoa cliente
+email_cliente: e-mail fictício da pessoa cliente
+estado: unidade federativa de destino da entrega
+data_pedido: data em que o pedido foi realizado
+data_envio: data em que o pedido foi enviado
+data_recebimento: data em que a entrega foi confirmada
+nota_nps: nota de 0 a 10 atribuída pela pessoa cliente
+comentario: texto livre com feedback qualitativo
+id_pedido,cliente,email_cliente,estado,data_pedido,data_envio,data_recebimento,nota_nps,comentario
+P001,Ana Souza,ana.souza@email.com,SP,2025-04-01,2025-04-03,2025-04-06,9,Entrega rápida e produto em perfeito estado
+P002,Bruno Lima,bruno.lima@email.com,RJ,2025-04-01,2025-04-04,2025-04-09,4,Produto chegou com a caixa amassada e fora do prazo
+P003,Carla Mendes,carla.mendes@email.com,MG,2025-04-02,2025-04-04,2025-04-08,7,Prazo ok mas a embalagem poderia ser melhor
+P004,Diego Rocha,diego.rocha@email.com,BA,2025-04-02,2025-04-06,2025-04-14,2,Atraso absurdo de mais de 10 dias e ninguém informou nada
+P005,Elena Martins,elena.martins@email.com,SP,2025-04-03,2025-04-05,2025-04-07,10,Excelente serviço como sempre
+P006,Felipe Alves,felipe.alves@email.com,RS,2025-04-03,2025-04-06,2025-04-12,3,Produto veio com defeito e a entrega atrasou
+P007,Gabriela Costa,gabriela.costa@email.com,PE,2025-04-04,2025-04-08,2025-04-16,1,Pior experiência de compra que já tive. Produto errado e sem resposta do suporte
+P008,Hugo Ferreira,hugo.ferreira@email.com,SP,2025-04-04,2025-04-06,2025-04-08,8,Tudo certo dentro do esperado
+P009,Isabela Nunes,isabela.nunes@email.com,CE,2025-04-05,2025-04-09,2025-04-17,3,Demora excessiva para o Nordeste. Inaceitável
+P010,João Pedro Santos,joao.santos@email.com,PR,2025-04-05,2025-04-07,2025-04-10,9,Muito satisfeito com a rapidez
+P011,Karen Oliveira,karen.oliveira@email.com,SC,2025-04-06,2025-04-08,2025-04-11,8,Bom serviço e prazo cumprido
+P012,Lucas Barbosa,lucas.barbosa@email.com,AM,2025-04-06,2025-04-11,2025-04-22,2,Mais de duas semanas para chegar. Região Norte é sempre esquecida
+P013,Mariana Dias,mariana.dias@email.com,RJ,2025-04-07,2025-04-09,2025-04-13,5,Prazo razoável mas o produto veio sem nota fiscal
+P014,Nicolas Teixeira,nicolas.teixeira@email.com,GO,2025-04-07,2025-04-10,2025-04-14,6,Entrega dentro do prazo mas sem comunicação de rastreio
+P015,Olívia Ramos,olivia.ramos@email.com,SP,2025-04-08,2025-04-10,2025-04-12,10,Perfeito. Recomendo a todos
+P016,Paulo Henrique,paulo.h@email.com,BA,2025-04-08,2025-04-12,2025-04-20,3,Atraso de quase duas semanas para a Bahia
+P017,Rafaela Cunha,rafaela.cunha@email.com,MG,2025-04-09,2025-04-11,2025-04-14,7,Nada a reclamar. Serviço padrão
+P018,Samuel Lopes,samuel.lopes@email.com,PA,2025-04-09,2025-04-14,2025-04-24,1,Produto chegou quebrado depois de 15 dias. Quero reembolso
+P019,Tatiana Vieira,tatiana.vieira@email.com,SP,2025-04-10,2025-04-12,2025-04-14,9,Entrega antes do prazo. Parabéns
+P020,Ulisses Moreira,ulisses.moreira@email.com,RS,2025-04-10,2025-04-13,2025-04-18,5,Demorou mais do que o prometido mas chegou inteiro
+P021,Vanessa Pinto,vanessa.pinto@email.com,PE,2025-04-11,2025-04-15,2025-04-23,2,Atraso enorme e produto com avaria. Péssimo
+P022,Wagner Silva,wagner.silva@email.com,RJ,2025-04-11,2025-04-13,2025-04-16,8,Bom prazo para o Rio de Janeiro
+P023,Ximena Araújo,ximena.araujo@email.com,SP,2025-04-12,2025-04-14,2025-04-16,10,Sempre entregam rápido em São Paulo
+P024,Yuri Cardoso,yuri.cardoso@email.com,MA,2025-04-12,2025-04-17,2025-04-26,2,Quase um mês para receber. Absurdo
+P025,Zélia Monteiro,zelia.monteiro@email.com,SC,2025-04-13,2025-04-15,2025-04-18,9,Ótima experiência de entrega
+P026,André Campos,andre.campos@email.com,MG,2025-04-13,2025-04-15,2025-04-19,6,Prazo ok mas faltou comunicação sobre o status
+P027,Bianca Freitas,bianca.freitas@email.com,CE,2025-04-14,2025-04-18,2025-04-26,3,Nordeste sempre com atraso. Precisam melhorar a logística regional
+P028,Caio Ribeiro,caio.ribeiro@email.com,SP,2025-04-14,2025-04-16,2025-04-18,9,Rápido e sem problemas
+P029,Daniela Gomes,daniela.gomes@email.com,PR,2025-04-15,2025-04-17,2025-04-20,8,Entrega no prazo e bem embalado
+P030,Eduardo Nascimento,eduardo.nasc@email.com,BA,2025-04-15,2025-04-19,2025-04-27,4,Atraso significativo. Produto ok mas o prazo não
+P031,Fernanda Castro,fernanda.castro@email.com,RJ,2025-04-16,2025-04-18,2025-04-22,6,Poderia ser mais rápido para o Rio
+P032,Gustavo Pereira,gustavo.pereira@email.com,AM,2025-04-16,2025-04-22,2025-05-02,1,Entrega demorou demais e veio com defeito. Quero devolução
+P033,Helena Duarte,helena.duarte@email.com,SP,2025-04-17,2025-04-19,2025-04-21,10,Impecável como sempre
+P034,Igor Fonseca,igor.fonseca@email.com,GO,2025-04-17,2025-04-20,2025-04-24,7,Dentro do esperado para o Centro-Oeste
+P035,Juliana Correia,juliana.correia@email.com,RS,2025-04-18,2025-04-21,2025-04-26,5,Demorou um pouco mais que o previsto
+P036,Kevin Machado,kevin.machado@email.com,PE,2025-04-18,2025-04-22,2025-04-30,3,Atraso de 12 dias. Inaceitável para uma empresa de logística
+P037,Larissa Azevedo,larissa.azevedo@email.com,MG,2025-04-19,2025-04-21,2025-04-25,7,Serviço satisfatório sem grandes problemas
+P038,Marcos Vinicius,marcos.v@email.com,SP,2025-04-19,2025-04-21,2025-04-23,9,Entrega expressa funcionou perfeitamente
+P039,Natália Borges,natalia.borges@email.com,PA,2025-04-20,2025-04-25,2025-05-04,2,Norte do Brasil é terra de ninguém para essa empresa
+P040,Otávio Reis,otavio.reis@email.com,SC,2025-04-20,2025-04-22,2025-04-25,8,Prazo cumprido e boa embalagem
+P041,Priscila Melo,priscila.melo@email.com,CE,2025-04-21,2025-04-25,2025-05-02,4,Atraso e falta de informação sobre rastreamento
+P042,Renato Souza,renato.souza@email.com,RJ,2025-04-21,2025-04-23,2025-04-27,7,Prazo aceitável para o estado do Rio
+P043,Sabrina Torres,sabrina.torres@email.com,SP,2025-04-22,2025-04-24,2025-04-26,10,Melhor logística que já usei
+P044,Thiago Amaral,thiago.amaral@email.com,BA,2025-04-22,2025-04-26,2025-05-03,3,Mais uma vez atraso para o Nordeste. Já é recorrente
+P045,Ursula Nogueira,ursula.nogueira@email.com,PR,2025-04-23,2025-04-25,2025-04-28,8,Sem reclamações. Entrega pontual
+P046,Vitor Hugo Braga,vitor.braga@email.com,MA,2025-04-23,2025-04-28,2025-05-07,1,Produto extraviado. Tive que abrir reclamação formal
+P047,Wesley Carvalho,wesley.carvalho@email.com,MG,2025-04-24,2025-04-26,2025-04-30,6,Prazo ok mas a caixa veio danificada
+P048,Xuxa Medeiros,xuxa.medeiros@email.com,SP,2025-04-24,2025-04-26,2025-04-28,9,Sempre confiável para São Paulo
+P049,Yasmin Farias,yasmin.farias@email.com,RS,2025-04-25,2025-04-28,2025-05-02,5,Poderia melhorar o prazo para o Sul
+P050,Zeca Pagodinho Jr,zeca.jr@email.com,AM,2025-04-25,2025-04-30,2025-05-10,2,Demora absurda para Manaus. Produto com avaria
+P051,Alice Brito,alice.brito@email.com,SP,2025-04-26,2025-04-28,2025-04-30,10,Entrega perfeita e rápida
+P052,Bernardo Luz,bernardo.luz@email.com,PE,2025-04-26,2025-04-30,2025-05-07,4,Atraso e sem atualização de rastreio
+P053,Cecília Andrade,cecilia.andrade@email.com,GO,2025-04-27,2025-04-30,2025-05-04,7,Dentro do prazo para Goiás
+P054,Davi Moura,davi.moura@email.com,RJ,2025-04-27,2025-04-29,2025-05-02,8,Bom serviço no geral
+P055,Elisa Tavares,elisa.tavares@email.com,CE,2025-04-28,2025-05-02,2025-05-10,3,Nordeste continua com problemas sérios de prazo
+P056,Fábio Guedes,fabio.guedes@email.com,SC,2025-04-28,2025-04-30,2025-05-03,9,Excelente para Santa Catarina
+P057,Gisele Prado,gisele.prado@email.com,BA,2025-04-29,2025-05-03,2025-05-11,4,Atraso de 12 dias. Produto ok mas o prazo não
+P058,Heitor Sampaio,heitor.sampaio@email.com,SP,2025-04-29,2025-05-01,2025-05-03,9,Rápido e confiável
+P059,Iris Cavalcanti,iris.cavalcanti@email.com,PA,2025-04-30,2025-05-05,2025-05-15,2,Região Norte precisa de atenção urgente. 15 dias é demais
+P060,Jorge Alencar,jorge.alencar@email.com,PR,2025-04-30,2025-05-02,2025-05-05,8,Prazo cumprido sem problemas
+
+handoff_vendas_posvenda.csv — Planilha de handoff entre equipe de vendas e pós-vendas
+id_pedido: identificador único do pedido
+cliente: nome da pessoa cliente
+email_cliente: e-mail de contato
+telefone: telefone de contato
+valor_pedido: valor total do pedido em reais
+data_pedido: data de realização do pedido
+estado: UF de destino
+status_pagamento: situação do pagamento (Aprovado, Pendente)
+responsavel_posvenda: pessoa responsável no pós-vendas
+observacoes: notas adicionais sobre o pedido
+
+id_pedido,cliente,email_cliente,telefone,valor_pedido,data_pedido,estado,status_pagamento,responsavel_posvenda,observacoes
+P001,Ana Souza,ana.souza@email.com,(11)91234-0001,320.00,2025-04-01,SP,Aprovado,Maria,Entrega expressa solicitada
+P002,Bruno Lima,bruno.lima@email.com,(21)91234-0002,185.50,2025-04-01,RJ,Aprovado,João,Cliente pediu embalagem reforçada
+P003,Carla Mendes,carla.mendes@email.com,(31)91234-0003,450.00,2025-04-02,MG,Aprovado,Maria,Sem observações
+P004,Diego Rocha,diego.rocha@email.com,(71)91234-0004,275.00,2025-04-02,BA,Aprovado,João,Endereço de difícil acesso
+P005,Elena Martins,elena.martins@email.com,(11)91234-0005,890.00,2025-04-03,SP,Aprovado,Maria,Cliente VIP
+P006,Felipe Alves,felipe.alves@email.com,(51)91234-0006,150.00,2025-04-03,RS,Aprovado,João,Produto frágil
+P007,Gabriela Costa,gabriela.costa@email.com,(81)91234-0007,520.00,2025-04-04,PE,Aprovado,Maria,Primeira compra do cliente
+P008,Hugo Ferreira,hugo.ferreira@email.com,(11)91234-0008,340.00,2025-04-04,SP,Aprovado,João,Sem observações
+P009,Isabela Nunes,isabela.nunes@email.com,(85)91234-0009,210.00,2025-04-05,CE,Aprovado,Maria,Endereço comercial
+P010,João Pedro Santos,joao.santos@email.com,(41)91234-0010,680.00,2025-04-05,PR,Aprovado,João,Cliente recorrente
+P011,Karen Oliveira,karen.oliveira@email.com,(48)91234-0011,195.00,2025-04-06,SC,Aprovado,Maria,Sem observações
+P012,Lucas Barbosa,lucas.barbosa@email.com,(92)91234-0012,430.00,2025-04-06,AM,Aprovado,João,Região de difícil acesso logístico
+P013,Mariana Dias,mariana.dias@email.com,(21)91234-0013,310.00,2025-04-07,RJ,Aprovado,Maria,Solicitar nota fiscal separada
+P014,Nicolas Teixeira,nicolas.teixeira@email.com,(62)91234-0014,255.00,2025-04-07,GO,Aprovado,João,Sem observações
+P015,Olívia Ramos,olivia.ramos@email.com,(11)91234-0015,720.00,2025-04-08,SP,Aprovado,Maria,Cliente VIP com desconto aplicado
+P016,Paulo Henrique,paulo.h@email.com,(71)91234-0016,180.00,2025-04-08,BA,Aprovado,João,Endereço atualizado pelo cliente
+P017,Rafaela Cunha,rafaela.cunha@email.com,(31)91234-0017,290.00,2025-04-09,MG,Aprovado,Maria,Sem observações
+P018,Samuel Lopes,samuel.lopes@email.com,(91)91234-0018,560.00,2025-04-09,PA,Aprovado,João,Produto de alto valor - seguro contratado
+P019,Tatiana Vieira,tatiana.vieira@email.com,(11)91234-0019,410.00,2025-04-10,SP,Aprovado,Maria,Entrega expressa
+P020,Ulisses Moreira,ulisses.moreira@email.com,(51)91234-0020,230.00,2025-04-10,RS,Aprovado,João,Sem observações
+P021,Vanessa Pinto,vanessa.pinto@email.com,(81)91234-0021,375.00,2025-04-11,PE,Aprovado,Maria,Produto frágil - embalar com cuidado
+P022,Wagner Silva,wagner.silva@email.com,(21)91234-0022,165.00,2025-04-11,RJ,Aprovado,João,Sem observações
+P023,Ximena Araújo,ximena.araujo@email.com,(11)91234-0023,490.00,2025-04-12,SP,Aprovado,Maria,Cliente recorrente
+P024,Yuri Cardoso,yuri.cardoso@email.com,(98)91234-0024,200.00,2025-04-12,MA,Aprovado,João,Região com histórico de atrasos
+P025,Zélia Monteiro,zelia.monteiro@email.com,(48)91234-0025,350.00,2025-04-13,SC,Aprovado,Maria,Sem observações
+P026,André Campos,andre.campos@email.com,(31)91234-0026,280.00,2025-04-13,MG,Aprovado,João,Sem observações
+P027,Bianca Freitas,bianca.freitas@email.com,(85)91234-0027,440.00,2025-04-14,CE,Aprovado,Maria,Endereço de difícil acesso
+P028,Caio Ribeiro,caio.ribeiro@email.com,(11)91234-0028,610.00,2025-04-14,SP,Aprovado,João,Sem observações
+P029,Daniela Gomes,daniela.gomes@email.com,(41)91234-0029,330.00,2025-04-15,PR,Aprovado,Maria,Sem observações
+P030,Eduardo Nascimento,eduardo.nasc@email.com,(71)91234-0030,195.00,2025-04-15,BA,Aprovado,João,Terceira compra do cliente
+
+1ª Etapa: Planejamento e criação do assistente GPT para comunicação de prazos
+A equipe comercial da Hermex Log precisa padronizar a forma como comunica prazos de entrega por região. Atualmente, cada pessoa do time informa prazos 
+diferentes, gerando expectativas irreais e reclamações. A tarefa é planejar e criar um assistente GPT personalizado que, dado o estado de destino, informe o prazo 
+estimado de entrega com base em regras da empresa.
+Pergunta-chave: "Como estruturar um assistente GPT reutilizável que padronize a comunicação de prazos de entrega, garantindo que certezas, suposições 
+e dúvidas do processo estejam mapeadas antes da implementação?"
+Sua missão:
+Abra o Bloco de notas e crie um documento de planejamento do assistente. Defina: 
+(a) o problema a ser resolvido, 
+(b) os critérios de resposta (estado de destino, tipo de frete, prazo em dias úteis), 
+(c) o formato de saída esperado (tabela com estado+região, prazo mínimo, prazo máximo, observações).
+Ainda no Bloco de notas, construa uma Matriz CSD (Certezas, Suposições e Dúvidas) 
+para o assistente. Dê exemplos:
+certezas: SP tem prazo de 2-4 dias úteis; 
+suposições: regiões Norte e Nordeste podem ter prazo de 8-15 dias úteis; 
+dúvidas: a empresa oferece frete expresso para todas as regiões? 
+
+Defina como cada categoria será tratada nas instruções do GPT.
+Redija o briefing completo do assistente no Bloco de notas, incluindo: 
+personalidade (assistente logístico profissional e objetivo), 
+tarefa com cadeia de pensamento em pelo menos 4 etapas numeradas (ler o estado informado → verificar a região → consultar a tabela de prazos → gerar resposta formatada), 
+formato de saída (tabela com colunas definidas) e 
+cuidados (não prometer prazos fora da tabela, informar que prazos são estimativas).
+
+Acesse o ChatGPT (GPTs customizados) e crie o assistente: defina nome ("Hermex Prazos"), descrição, cole o briefing no campo de instruções, desabilite 
+recursos desnecessários (geração de imagens, quadro branco) e configure quebra-gelos relevantes (ex.: "Qual o prazo para entrega em Salvador?").
+
+Teste o assistente com pelo menos 3 cenários: um estado do Sudeste (SP), um do Nordeste (BA) e um do Norte (AM). 
+Registre os resultados no Bloco de notas e avalie se o assistente seguiu a cadeia de pensamento e o formato de saída definidos.
+Ferramentas: Bloco de notas, ChatGPT (GPTs customizados), Matriz CSD
+Dicas de troubleshooting para a 1ª etapa:
+Se o assistente não seguir o formato de tabela, revise se as instruções estão explícitas sobre o formato de saída e se a cadeia de pensamento está numerada.
+Se o assistente inventar prazos que não estão no briefing, adicione uma instrução explícita: "Responda SOMENTE com base nos prazos definidos nas instruções. 
+Se não houver informação para o estado, informe que não possui dados."
+Se o assistente responder de forma genérica sem considerar a região, verifique se a etapa de "verificar a região" está clara na cadeia de pensamento e se há exemplos 
+de entrada/saída no briefing.
+
+2ª Etapa: Mapeamento do processo de pós-vendas e definição de responsabilidades
+Antes de automatizar, é preciso mapear. A Hermex Log não possui documentação formal do processo que vai do envio do pedido até a pesquisa de satisfação. A tarefa é desenhar esse processo, identificar pontos de automação e definir responsabilidades.
+Pergunta-chave: "Quais são os pontos críticos de comunicação entre equipes no processo de pós-vendas da Hermex Log e como a Matriz RACI ajuda a definir responsabilidades que viabilizem a automação?"
+Sua missão:
+No Miro, desenhe o fluxograma do processo de pós-vendas da Hermex Log usando a simbologia correta: ovalados para blocos principais (Início — Pedido Enviado, Fim — Ciclo Encerrado), retângulos arredondados para atividades (registrar envio na planilha de handoff, enviar e-mail de notificação ao pós-vendas, confirmar entrega, enviar pesquisa de satisfação, classificar feedback, notificar equipe) e losangos para decisões (Entrega confirmada? Sim/Não; Cliente insatisfeito? Sim/Não). Inclua pelo menos um looping (ex.: se a entrega não foi confirmada, aguardar e verificar novamente).
+No fluxograma, marque com borda vermelha as atividades que serão candidatas à automação. Utilize os cinco critérios de decisão para automação (repetitividade, regras claras, transferência de informações entre equipes, criticidade, rastreabilidade) e anote ao lado de cada atividade marcada qual critério justifica a automação.
+No Google Sheets, crie uma aba chamada "Matriz RACI" na planilha handoff_vendas_posvenda. Na primeira coluna, liste as atividades do processo (mínimo 6). Nas colunas seguintes, liste os papéis: Equipe de Vendas, Equipe de Pós-Vendas, Sistema N8N, Sistema de Correios, Liderança. Preencha cada célula com R, A, C ou I conforme a responsabilidade.
+Ainda no Google Sheets, na planilha handoff_vendas_posvenda, importe os dados do CSV fornecido e verifique se a estrutura está adequada para servir de gatilho no n8n (cada linha = um pedido, campos obrigatórios preenchidos).
+No Bloco de notas, escreva um parágrafo justificando por que o ponto de comunicação entre vendas e pós-vendas (planilha de handoff) é o mais crítico para automação, referenciando pelo menos 3 dos 5 critérios.
+Ferramentas: Miro, Google Sheets, Bloco de notas
+Dicas de troubleshooting para a 2ª etapa:
+Se o fluxograma ficar muito extenso, foque no "caminho feliz" primeiro e depois adicione os caminhos alternativos (ex.: entrega não confirmada, cliente insatisfeito).
+Se houver dúvida sobre quem é Responsible vs. Accountable na Matriz RACI, lembre-se: Responsible é quem executa a atividade, Accountable é quem aprova ou assume a responsabilidade final. Sistemas podem ser Responsible.
+Se a planilha de handoff parecer incompleta, revise se todos os campos necessários para o workflow do n8n estão presentes (id_pedido, cliente, email_cliente são essenciais).
+3ª Etapa: Automação do fluxo de NPS com n8n e classificação por IA
+Com o processo mapeado e as responsabilidades definidas, é hora de construir a automação. A tarefa é criar um workflow no n8n que monitore novas respostas de NPS, classifique os comentários com IA (Gemini) e notifique a equipe de pós-vendas por e-mail.
+Pergunta-chave: "Como construir um workflow no n8n que integre coleta de dados, lógica condicional baseada em regras de negócio e classificação por IA, garantindo que a equipe receba notificações acionáveis com validação humana?"
+Sua missão:
+Importe o dataset pesquisa_satisfacao.csv para o Google Sheets (na planilha pesquisa_satisfacao). Crie um Google Forms com os campos: ID do Pedido, Nota NPS (0-10) e Comentário. Configure o Forms para gravar respostas em uma nova aba da mesma planilha.
+No n8n, crie um workflow chamado "Hermex — NPS Automação". Configure um gatilho do Google Sheets que dispare quando uma nova linha for adicionada à aba de respostas do Forms. Teste o gatilho adicionando uma resposta fictícia e fixe os dados com Pin Data.
+Adicione um nó condicional (if) que verifique se a nota NPS é menor que 6 (detrator). Para o caminho "verdadeiro" (detrator), adicione um nó do Gemini (via API) com um prompt que classifique o comentário em uma das categorias: Atraso, Defeito, Atendimento, Embalagem ou Outro. O prompt deve restringir a resposta a uma única palavra dentre essas categorias.
+Após a classificação, configure um nó Gmail que envie um e-mail de notificação à equipe de pós-vendas contendo: nome do cliente (variável dinâmica), nota NPS, categoria classificada pela IA e o comentário original (para validação humana). Use a sintaxe {{$json['campo']}} para inserir dados dinâmicos.
+Para o caminho "falso" (nota >= 6), configure um segundo nó Gmail que envie um e-mail de agradecimento ao cliente, mencionando o nome e agradecendo pelo feedback.
+Teste o workflow completo com pelo menos 2 cenários: um detrator (nota < 6) e um promotor (nota >= 9). Verifique se os e-mails foram enviados corretamente. Use o TempEmail.org se necessário para não poluir caixas de entrada reais.
+Ferramentas: n8n, Google Sheets, Google Forms, Gemini, Gmail
+Dicas de troubleshooting para a 3ª etapa:
+Se o gatilho do Google Sheets ficar esperando indefinidamente, lembre-se de que é necessário adicionar uma nova linha na planilha para que ele dispare. Adicione uma resposta manualmente pelo Google Forms.
+Se o Gemini retornar explicações em vez de uma única palavra de categoria, ajuste o prompt para ser mais restritivo: "Responda APENAS com uma das seguintes palavras: Atraso, Defeito, Atendimento, Embalagem, Outro. Nenhuma explicação adicional."
+Se o e-mail chegar sem os dados dinâmicos, verifique se a sintaxe das expressões está correta e se o nó anterior foi executado com sucesso (confira os outputs de cada nó).
+4ª Etapa: Dashboard de NPS no Looker Studio e base de conhecimento no Notion
+A etapa final integra análise de dados com documentação. A tarefa é construir um dashboard que permita à liderança da Hermex Log acompanhar o NPS por região e SLA de entrega, e documentar os processos internos no Notion para futura integração com um chatbot de IA.
+Pergunta-chave: "Como combinar visualização de dados quantitativos (dashboard de NPS e SLA) com documentação semântica (base de conhecimento no Notion) para criar um ecossistema de dados que sustente tanto a tomada de decisão humana quanto a alimentação futura de agentes de IA?"
+Sua missão:
+No Looker Studio, conecte a planilha pesquisa_satisfacao do Google Sheets como fonte de dados. Ajuste os tipos de campos: estado como tipo geográfico (subdivisão de país nível 1), data_pedido, data_envio e data_recebimento como datas, nota_nps como número.
+Crie os seguintes campos calculados no Looker Studio:
+Promotores: IF(nota_nps > 8, 1, 0)
+Detratores: IF(nota_nps < 7, 1, 0)
+NPS: (SUM(Promotores)/COUNT(nota_nps)) - (SUM(Detratores)/COUNT(nota_nps)) — formate como porcentagem.
+Dias até envio: DATE_DIFF(data_envio, data_pedido) — use como métrica (média).
+Dias até entrega: DATE_DIFF(data_recebimento, data_pedido) — use como métrica (média).
+Monte o dashboard com pelo menos 4 visualizações: (a) Scorecard com o NPS geral, total de promotores e total de detratores; (b) Gráfico de mapa do Brasil colorido pelo NPS médio por estado (azul para alto, vermelho para baixo); (c) Gráfico de barras com a média de dias até entrega por estado; (d) Tabela com estado, quantidade de respostas, NPS, média de dias até envio e média de dias até entrega.
+No Notion, crie um database chamado "Processos Hermex Log" com pelo menos 3 páginas:
+Política de Devolução: descreva em linguagem natural as regras de devolução (prazo de 7 dias, condições do produto, processo de solicitação).
+Processo de Reembolso: descreva etapas, prazos (até 10 dias úteis) e condições.
+SLA de Entrega por Região: documente os prazos por região (Sudeste: 2-5 dias, Sul: 3-6 dias, Centro-Oeste: 4-7 dias, Nordeste: 6-12 dias, Norte: 8-16 dias).
+No Bloco de notas, redija um documento de governança de dados com os seguintes itens: (a) quem é responsável pela atualização de cada base no Notion (use a lógica da Matriz RACI); (b) com que frequência cada base deve ser revisada; (c) quais riscos existem se a base ficar desatualizada (respostas incorretas de futuros chatbots, alucinações); (d) por que dados semânticos (textos interpretados) são mais eficazes para alimentar modelos de linguagem do que dados operacionais brutos.
+Ferramentas: Looker Studio, Google Sheets, Notion, Bloco de notas
+Dicas de troubleshooting para a 4ª etapa:
+Se o mapa do Looker Studio não reconhecer alguns estados, verifique se o campo está configurado como tipo geográfico correto. Tente alterar de "subdivisão do país" para "endereço" ou vice-versa. Certifique-se de que os nomes dos estados estão padronizados (siglas de 2 letras).
+Se o campo calculado do NPS aparecer como soma em vez de valor único no scorecard, ajuste a agregação do gráfico para que exiba o campo calculado sem agregação adicional.
+Se o Notion não parecer adequado para documentação técnica, lembre-se de que cada parágrafo é um bloco — escreva textos coesos e completos em cada seção para que, em uma futura vetorização, os chunks tenham qualidade semântica.
+
+
+
+
+
+
+
+
+
+
+
+aluraCarreiraEspecialistaIANivel1B
+Especialista em IA Nivel 1
+
+Prompt1:
+Analise profundamente o desafio a seguir e verifique quais são os conhecimentos necessários para realização do mesmo inclusive sua 
+persona e os softwares necessários para serem instalados. 
+Gere um relatório executivo .docx com as características do anexo colocando este relatório no diretório Analise que vc criará com 
+tais informações bem como um relatório equivalente .md também no diretório Analise. 
+Neste momento vc não executará nada só fará um estudo detalhado do desafio e irá gerar as informações nos arquivos de relatório com detalhes. 
+Analise também com profundidade o arquivo em anexo.
+Antes de levantar tais informações faça 3 análises da sua resposta bem como 3 revisões de sua resposta para aumentar a 
+qualidade da mesma e evitar não colocar algum detalhe relevante. Diga também se podes executar a implementação direto, caso não , 
+forneça as decisões que eu preciso tomar poara que vc possa fazer tudo direto, as 4 etapas
+A seguir o desafio:
+
+
+
+Faça 3 análises críticas de seu levantamento bem como 3 revisões do mesmo para aumentar a qualidade do levantamento e 
+evitar não colocar algum detalhe relevante. Crie também os relatórios do levantamento .docx e .md no diretório Analise criado por vc. 
+O espírito e as características são as mesmas dos relatórios em anexo incluindo o passo a passo da análise, os testes sugeridos bem 
+como o resultado dos mesmos e tudo mais que seja necessário para provar e também as evidências que seu levantamento foi realizada 
+com sucesso. Bem como a tabela de cada critério de aceite com o status "feito". 
+
+
+
+
+Blz então agora execute a implementação do desafio.
+
+Ao final faça 3 análises da sua implementação bem como 3 revisões de sua da mesma para aumentar a qualidade da mesma 
+e evitar não colocar algum detalhe relevante. Crie também os relatórios de implementação .docx e .md no Diretório Analise. 
+O espírito e as características são as mesmas dos relatórios anteriores incluindo o passo a passo da implementação, apresentando;
+os testes bem como o resultado dos mesmos e tudo mais que seja necessário para provar inclusive as evidências que a implementação
+foi realizada com sucesso. Bem como a tabela de cada critério de aceite com o status "feito". Diga como posso testar para comprovar 
+a resolução correta coloque o repositório ao final do .docx.
+
+
+
+Agora faça:
+1. Feche completamente o ChatGPT/Codex.
+2. Confirme no Gerenciador de Tarefas que o processo terminou.
+3. Abra o aplicativo novamente.
+4. Inicie uma conversa nova neste workspace.
+5. Envie: “Teste o Browser e abra o Notion”.
+Esse reinício é necessário apenas uma vez após a correção. Se a lista continuar vazia, o problema restante estará no backend do aplicativo, 
+não mais no browser-client.mjs.
+
+
+
+No Windows:
+1. Salve o que estiver editando no VS Code.
+2. Na janela do ChatGPT/Codex, clique no X no canto superior direito.
+3. Verifique a área de notificação ao lado do relógio:
+   - clique na seta ^;
+   - se aparecer ChatGPT ou Codex, clique com o botão direito;
+   - selecione Sair, Quit ou Encerrar.
+4. Pressione Ctrl + Shift + Esc para abrir o Gerenciador de Tarefas.
+5. Procure por:
+   - ChatGPT;
+   - Codex;
+   - OpenAI;
+   - processos relacionados ao aplicativo.
+6. Se ainda estiverem ativos, selecione cada um e clique em Finalizar tarefa. Não encerre Chrome, Edge ou VS Code.
+7. Aguarde aproximadamente 10 segundos.
+8. Abra o menu Iniciar e pesquise por ChatGPT ou Codex.
+9. Clique no aplicativo para iniciá-lo novamente.
+10. Reabra o workspace:
+E:\ProjAlura\CarreiraEspecialistaEmIAB\Nivel1
+Depois, abra uma conversa nova e escreva:
+Teste o Browser e abra https://app.notion.com/p/234fb0968aa380c3be25d11019c5877d
+
+
+11:11 PM
+
+
+
+
+
+
+
+
+

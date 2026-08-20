@@ -1,0 +1,52 @@
+Desafio1-EspB:Nivel1
+
+
+
+aluraCarreiraEspecialistaIANivel1B
+Especialista em IA Nivel 1
+
+Prompt1:
+Analise profundamente o desafio a seguir e verifique quais são os conhecimentos necessários para realização do mesmo inclusive sua 
+persona e os softwares necessários para serem instalados. 
+Gere um relatório executivo .docx com as características do anexo colocando este relatório no diretório Analise que vc criará com 
+tais informações bem como um relatório equivalente .md também no diretório Analise. 
+Neste momento vc não executará nada só fará um estudo detalhado do desafio e irá gerar as informações nos arquivos de relatório com detalhes. 
+Analise também com profundidade o arquivo em anexo.
+Antes de levantar tais informações faça 3 análises da sua resposta bem como 3 revisões de sua resposta para aumentar a 
+qualidade da mesma e evitar não colocar algum detalhe relevante. Diga também se podes executar a implementação direto, caso não , 
+forneça as decisões que eu preciso tomar poara que vc possa fazer tudo direto, as 4 etapas
+A seguir o desafio:
+
+
+
+Faça 3 análises críticas de seu levantamento bem como 3 revisões do mesmo para aumentar a qualidade do levantamento e 
+evitar não colocar algum detalhe relevante. Crie também os relatórios do levantamento .docx e .md no diretório Analise criado por vc. 
+O espírito e as características são as mesmas dos relatórios em anexo incluindo o passo a passo da análise, os testes sugeridos bem 
+como o resultado dos mesmos e tudo mais que seja necessário para provar e também as evidências que seu levantamento foi realizada 
+com sucesso. Bem como a tabela de cada critério de aceite com o status "feito". 
+
+
+
+
+Blz então agora execute a implementação do desafio.
+
+Ao final faça 3 análises da sua implementação bem como 3 revisões de sua da mesma para aumentar a qualidade da mesma 
+e evitar não colocar algum detalhe relevante. Crie também os relatórios de implementação .docx e .md no Diretório Analise. 
+O espírito e as características são as mesmas dos relatórios anteriores incluindo o passo a passo da implementação, apresentando;
+os testes bem como o resultado dos mesmos e tudo mais que seja necessário para provar inclusive as evidências que a implementação
+foi realizada com sucesso. Bem como a tabela de cada critério de aceite com o status "feito". Diga como posso testar para comprovar 
+a resolução correta coloque o repositório ao final do .docx.
+
+
+
+u
+
+
+
+
+
+
+
+
+
+

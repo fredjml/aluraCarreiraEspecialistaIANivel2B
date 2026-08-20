@@ -1,0 +1,18 @@
+flowchart TD
+  I([Início — Pedido enviado]) --> A(Registrar envio no handoff)
+  A --> B(Enviar notificação ao pós-vendas)
+  B --> C(Confirmar entrega)
+  C --> D{Entrega confirmada?}
+  D -- Não --> E(Aguardar e verificar novamente)
+  E --> C
+  D -- Sim --> F(Enviar pesquisa de satisfação)
+  F --> G(Classificar feedback)
+  G --> H{Cliente insatisfeito?}
+  H -- Sim --> J(Notificar equipe e aguardar aprovação humana)
+  H -- Não --> K(Enviar agradecimento e aguardar aprovação humana)
+  J --> Z([Fim — Ciclo encerrado])
+  K --> Z
+  classDef auto stroke:#d32f2f,stroke-width:3px,fill:#fff5f5;
+  class A,B,C,E,F,G,J,K auto;
+
+%% Critérios: A/B/F/J/K = repetitividade, transferência e rastreabilidade; C/E = criticidade e rastreabilidade; G = regras claras e repetitividade.

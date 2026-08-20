@@ -1,0 +1,31 @@
+id_pedido,cliente,email_cliente,telefone,valor_pedido,data_pedido,estado,status_pagamento,responsavel_posvenda,observacoes
+P001,Ana Souza,ana.souza@email.com,(11)91234-0001,320.00,2025-04-01,SP,Aprovado,Maria,Entrega expressa solicitada
+P002,Bruno Lima,bruno.lima@email.com,(21)91234-0002,185.50,2025-04-01,RJ,Aprovado,João,Cliente pediu embalagem reforçada
+P003,Carla Mendes,carla.mendes@email.com,(31)91234-0003,450.00,2025-04-02,MG,Aprovado,Maria,Sem observações
+P004,Diego Rocha,diego.rocha@email.com,(71)91234-0004,275.00,2025-04-02,BA,Aprovado,João,Endereço de difícil acesso
+P005,Elena Martins,elena.martins@email.com,(11)91234-0005,890.00,2025-04-03,SP,Aprovado,Maria,Cliente VIP
+P006,Felipe Alves,felipe.alves@email.com,(51)91234-0006,150.00,2025-04-03,RS,Aprovado,João,Produto frágil
+P007,Gabriela Costa,gabriela.costa@email.com,(81)91234-0007,520.00,2025-04-04,PE,Aprovado,Maria,Primeira compra do cliente
+P008,Hugo Ferreira,hugo.ferreira@email.com,(11)91234-0008,340.00,2025-04-04,SP,Aprovado,João,Sem observações
+P009,Isabela Nunes,isabela.nunes@email.com,(85)91234-0009,210.00,2025-04-05,CE,Aprovado,Maria,Endereço comercial
+P010,João Pedro Santos,joao.santos@email.com,(41)91234-0010,680.00,2025-04-05,PR,Aprovado,João,Cliente recorrente
+P011,Karen Oliveira,karen.oliveira@email.com,(48)91234-0011,195.00,2025-04-06,SC,Aprovado,Maria,Sem observações
+P012,Lucas Barbosa,lucas.barbosa@email.com,(92)91234-0012,430.00,2025-04-06,AM,Aprovado,João,Região de difícil acesso logístico
+P013,Mariana Dias,mariana.dias@email.com,(21)91234-0013,310.00,2025-04-07,RJ,Aprovado,Maria,Solicitar nota fiscal separada
+P014,Nicolas Teixeira,nicolas.teixeira@email.com,(62)91234-0014,255.00,2025-04-07,GO,Aprovado,João,Sem observações
+P015,Olívia Ramos,olivia.ramos@email.com,(11)91234-0015,720.00,2025-04-08,SP,Aprovado,Maria,Cliente VIP com desconto aplicado
+P016,Paulo Henrique,paulo.h@email.com,(71)91234-0016,180.00,2025-04-08,BA,Aprovado,João,Endereço atualizado pelo cliente
+P017,Rafaela Cunha,rafaela.cunha@email.com,(31)91234-0017,290.00,2025-04-09,MG,Aprovado,Maria,Sem observações
+P018,Samuel Lopes,samuel.lopes@email.com,(91)91234-0018,560.00,2025-04-09,PA,Aprovado,João,Produto de alto valor - seguro contratado
+P019,Tatiana Vieira,tatiana.vieira@email.com,(11)91234-0019,410.00,2025-04-10,SP,Aprovado,Maria,Entrega expressa
+P020,Ulisses Moreira,ulisses.moreira@email.com,(51)91234-0020,230.00,2025-04-10,RS,Aprovado,João,Sem observações
+P021,Vanessa Pinto,vanessa.pinto@email.com,(81)91234-0021,375.00,2025-04-11,PE,Aprovado,Maria,Produto frágil - embalar com cuidado
+P022,Wagner Silva,wagner.silva@email.com,(21)91234-0022,165.00,2025-04-11,RJ,Aprovado,João,Sem observações
+P023,Ximena Araújo,ximena.araujo@email.com,(11)91234-0023,490.00,2025-04-12,SP,Aprovado,Maria,Cliente recorrente
+P024,Yuri Cardoso,yuri.cardoso@email.com,(98)91234-0024,200.00,2025-04-12,MA,Aprovado,João,Região com histórico de atrasos
+P025,Zélia Monteiro,zelia.monteiro@email.com,(48)91234-0025,350.00,2025-04-13,SC,Aprovado,Maria,Sem observações
+P026,André Campos,andre.campos@email.com,(31)91234-0026,280.00,2025-04-13,MG,Aprovado,João,Sem observações
+P027,Bianca Freitas,bianca.freitas@email.com,(85)91234-0027,440.00,2025-04-14,CE,Aprovado,Maria,Endereço de difícil acesso
+P028,Caio Ribeiro,caio.ribeiro@email.com,(11)91234-0028,610.00,2025-04-14,SP,Aprovado,João,Sem observações
+P029,Daniela Gomes,daniela.gomes@email.com,(41)91234-0029,330.00,2025-04-15,PR,Aprovado,Maria,Sem observações
+P030,Eduardo Nascimento,eduardo.nasc@email.com,(71)91234-0030,195.00,2025-04-15,BA,Aprovado,João,Terceira compra do cliente

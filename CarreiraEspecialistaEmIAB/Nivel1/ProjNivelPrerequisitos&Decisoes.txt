@@ -1,0 +1,146 @@
+Desafio1-EspB:Nivel1
+pré requisitos: decisões e softwares configurados
+Analisei integralmente o relatório. Para eu implementar o desafio sem pendências, você precisa concluir dois 
+blocos: **configurações de acesso** e **decisões de negócio**. O maior risco não é técnico; são regras ainda 
+contraditórias ou indefinidas.
+
+## 1. Configurações e acessos obrigatórios
+
+- **Google**
+  - Conta proprietária definida.
+  - Planilha `pesquisa_satisfacao` criada e acessível.
+  - Aba de respostas vinculada ao Google Forms.
+  - Permissão de edição no Sheets, Forms, Drive, Gmail e Looker Studio.
+  - Credencial OAuth do Google conectada no n8n.
+  - Pasta no Drive para organizar os artefatos.
+
+- **n8n**
+  - Workflow criado, ainda não publicado.
+  - Credencial Google conectada.
+  - Credencial Gemini conectada — você já confirmou esta etapa.
+  - Google Sheets Trigger apontando para o documento e para o `gid` da aba.
+  - Caixa de e-mail de teste definida.
+  - Limite de execuções do plano verificado.
+
+- **Gemini**
+  - Credencial conectada — concluído.
+  - Projeto com API habilitada e cota disponível.
+  - Modelo Gemini permitido no projeto.
+
+- **Outras plataformas**
+  - ChatGPT Plus disponível para criação do GPT personalizado.
+  - Board do Miro criado e com permissão de edição.
+  - Workspace do Notion criado e com permissão de edição.
+  - Looker Studio acessível pela conta proprietária.
+
+Esses recursos estão enumerados no próprio relatório. :codex-file-citation{path="E:\ProjAlura\CarreiraEspecialistaEmIAB\
+Nivel1\Analise\relatorio_executivo_hermex_log.docx" purpose="source" artifact_kind="document" page_number="3"}
+
+## 2. Decisões que você precisa fornecer
+
+Estas decisões precisam ser explícitas; eu não devo inventá-las:
+
+1. **Tabela oficial de SLA**
+   - Prazos por UF ou região.
+   - Prazo mínimo e máximo.
+   - Modalidades de frete.
+   - Tratamento de feriados, áreas remotas e dias úteis.
+   - Resolver as divergências existentes, como SP `2–4` versus Sudeste `2–5`.
+
+2. **Regra de detrator**
+   - Recomendo adotar a convenção NPS: notas de `0 a 6`.
+   - No IF do n8n isso significa **menor ou igual a 6**, não “menor que 6”.
+
+3. **Cálculo de prazo no dashboard**
+   - Escolher entre dias corridos e dias úteis.
+   - `DATE_DIFF` comum calcula dias corridos; SLA em dias úteis exige outra lógica.
+
+4. **Origem do nome e do e-mail**
+   - Adicionar esses campos ao Google Forms; ou
+   - Buscar pelo `id_pedido` na base `handoff_vendas_posvenda`.
+   - Recomendo buscar pelo pedido, evitando solicitar novamente dados do cliente.
+
+5. **Tratamento dos pedidos P031–P060**
+   - A pesquisa contém 60 pedidos.
+   - O handoff contém somente P001–P030.
+   - É necessário completar o handoff ou definir o que fazer quando não houver correspondência.
+
+6. **Destinatários**
+   - E-mail de teste para alertas.
+   - E-mail operacional da equipe de pós-vendas.
+   - Remetente dos agradecimentos.
+   - Definir se agradecimentos serão enviados apenas a promotores `9–10` ou também a neutros `7–8`.
+
+7. **Aprovação humana**
+   - Recomendo exigir aprovação antes de qualquer resposta individual ao cliente.
+   - Reembolso, devolução e compensação nunca devem ser decididos apenas pelo Gemini.
+
+8. **Responsáveis**
+   - Accountable pelo SLA.
+   - Accountable pelo pós-vendas.
+   - Responsável pelo dashboard.
+   - Proprietário da documentação no Notion.
+
+9. **Privacidade**
+   - Prazo de retenção de dados e logs.
+   - Quem poderá acessar informações pessoais.
+   - Anonimização de capturas e evidências.
+   - Política para exclusão de dados de teste.
+
+As inconsistências funcionais e técnicas estão consolidadas nas páginas 4 e 5. :codex-file-citation{path="E:\ProjAlura\
+CarreiraEspecialistaEmIAB\Nivel1\Analise\relatorio_executivo_hermex_log.docx" purpose="source" artifact_kind="document" 
+page_number="4"} :codex-file-citation{path="E:\ProjAlura\CarreiraEspecialistaEmIAB\Nivel1\Analise\
+relatorio_executivo_hermex_log.docx" purpose="source" artifact_kind="document" page_number="5"}
+
+## 3. Informações mínimas que você pode me fornecer agora
+
+Sem enviar senhas, tokens ou chaves, responda preenchendo:
+
+```text
+SLA oficial:
+Modalidades de frete:
+Regra de detrator: <= 6 ou < 6
+Dashboard: dias úteis ou corridos
+Nome/e-mail: Forms ou busca pelo id_pedido
+Tratamento para P031–P060:
+E-mail de teste:
+E-mail operacional:
+Agradecimento para: 7–10 ou 9–10
+Aprovação humana antes do envio: sim ou não
+Responsável pelo SLA:
+Responsável pelo pós-vendas:
+Responsável pelo dashboard:
+Responsável pelo Notion:
+Retenção dos dados:
+```
+
+Além disso, mantenha abertas e autenticadas as sessões do **n8n, Google, Miro, Notion e ChatGPT** quando formos 
+executar cada etapa. Autorizações OAuth e chaves secretas devem continuar sendo inseridas exclusivamente por você 
+nas janelas oficiais.
+
+Com esse formulário respondido e os acessos acima configurados, não restará nenhuma pendência funcional conhecida 
+para iniciar a implementação. A lista integral das decisões obrigatórias também aparece no encerramento do relatório.
+ :codex-file-citation{path="E:\ProjAlura\CarreiraEspecialistaEmIAB\Nivel1\Analise\relatorio_executivo_hermex_log.docx" 
+purpose="source" artifact_kind="document" page_number="7"}
+
+
+Resposta:
+SLA oficial: 5 dias corridos prazo exato
+Modalidades de frete: expresso e comum (mesmo prazo)
+Regra de detrator:  < 6
+Dashboard: dias corridos
+Nome/e-mail: busca pelo id_pedido
+Tratamento para P031–P060:
+E-mail de teste: fredjml.br+hermex@gmail.com
+E-mail operacional: fredbrhermex@gmail.com
+Agradecimento para: 7–10 
+Aprovação humana antes do envio: sim 
+Responsável pelo SLA: José
+Responsável pelo pós-vendas: João
+Responsável pelo dashboard: Predro
+Responsável pelo Notion: Paulo
+Retenção dos dados: Dados e logs mantidos por 2 dias, em 7 dias apagados, dias corridos 
+ fredjml.br@gmail.com 9Fred)
+
+
+

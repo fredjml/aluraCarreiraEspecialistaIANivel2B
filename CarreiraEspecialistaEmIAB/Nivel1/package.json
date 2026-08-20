@@ -1,0 +1,13 @@
+{
+  "name": "hermex-log-nps",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Implementação reproduzível do Desafio Hermex Log — Especialista em IA Nível 1",
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-isolation=none",
+    "demo": "node src/demo.js",
+    "data": "node scripts/extrair-datasets.js"
+  },
+  "engines": { "node": ">=20" }
+}

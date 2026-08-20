@@ -1,0 +1,61 @@
+id_pedido,cliente,email_cliente,estado,data_pedido,data_envio,data_recebimento,nota_nps,comentario
+P001,Ana Souza,ana.souza@email.com,SP,2025-04-01,2025-04-03,2025-04-06,9,Entrega rápida e produto em perfeito estado
+P002,Bruno Lima,bruno.lima@email.com,RJ,2025-04-01,2025-04-04,2025-04-09,4,Produto chegou com a caixa amassada e fora do prazo
+P003,Carla Mendes,carla.mendes@email.com,MG,2025-04-02,2025-04-04,2025-04-08,7,Prazo ok mas a embalagem poderia ser melhor
+P004,Diego Rocha,diego.rocha@email.com,BA,2025-04-02,2025-04-06,2025-04-14,2,Atraso absurdo de mais de 10 dias e ninguém informou nada
+P005,Elena Martins,elena.martins@email.com,SP,2025-04-03,2025-04-05,2025-04-07,10,Excelente serviço como sempre
+P006,Felipe Alves,felipe.alves@email.com,RS,2025-04-03,2025-04-06,2025-04-12,3,Produto veio com defeito e a entrega atrasou
+P007,Gabriela Costa,gabriela.costa@email.com,PE,2025-04-04,2025-04-08,2025-04-16,1,Pior experiência de compra que já tive. Produto errado e sem resposta do suporte
+P008,Hugo Ferreira,hugo.ferreira@email.com,SP,2025-04-04,2025-04-06,2025-04-08,8,Tudo certo dentro do esperado
+P009,Isabela Nunes,isabela.nunes@email.com,CE,2025-04-05,2025-04-09,2025-04-17,3,Demora excessiva para o Nordeste. Inaceitável
+P010,João Pedro Santos,joao.santos@email.com,PR,2025-04-05,2025-04-07,2025-04-10,9,Muito satisfeito com a rapidez
+P011,Karen Oliveira,karen.oliveira@email.com,SC,2025-04-06,2025-04-08,2025-04-11,8,Bom serviço e prazo cumprido
+P012,Lucas Barbosa,lucas.barbosa@email.com,AM,2025-04-06,2025-04-11,2025-04-22,2,Mais de duas semanas para chegar. Região Norte é sempre esquecida
+P013,Mariana Dias,mariana.dias@email.com,RJ,2025-04-07,2025-04-09,2025-04-13,5,Prazo razoável mas o produto veio sem nota fiscal
+P014,Nicolas Teixeira,nicolas.teixeira@email.com,GO,2025-04-07,2025-04-10,2025-04-14,6,Entrega dentro do prazo mas sem comunicação de rastreio
+P015,Olívia Ramos,olivia.ramos@email.com,SP,2025-04-08,2025-04-10,2025-04-12,10,Perfeito. Recomendo a todos
+P016,Paulo Henrique,paulo.h@email.com,BA,2025-04-08,2025-04-12,2025-04-20,3,Atraso de quase duas semanas para a Bahia
+P017,Rafaela Cunha,rafaela.cunha@email.com,MG,2025-04-09,2025-04-11,2025-04-14,7,Nada a reclamar. Serviço padrão
+P018,Samuel Lopes,samuel.lopes@email.com,PA,2025-04-09,2025-04-14,2025-04-24,1,Produto chegou quebrado depois de 15 dias. Quero reembolso
+P019,Tatiana Vieira,tatiana.vieira@email.com,SP,2025-04-10,2025-04-12,2025-04-14,9,Entrega antes do prazo. Parabéns
+P020,Ulisses Moreira,ulisses.moreira@email.com,RS,2025-04-10,2025-04-13,2025-04-18,5,Demorou mais do que o prometido mas chegou inteiro
+P021,Vanessa Pinto,vanessa.pinto@email.com,PE,2025-04-11,2025-04-15,2025-04-23,2,Atraso enorme e produto com avaria. Péssimo
+P022,Wagner Silva,wagner.silva@email.com,RJ,2025-04-11,2025-04-13,2025-04-16,8,Bom prazo para o Rio de Janeiro
+P023,Ximena Araújo,ximena.araujo@email.com,SP,2025-04-12,2025-04-14,2025-04-16,10,Sempre entregam rápido em São Paulo
+P024,Yuri Cardoso,yuri.cardoso@email.com,MA,2025-04-12,2025-04-17,2025-04-26,2,Quase um mês para receber. Absurdo
+P025,Zélia Monteiro,zelia.monteiro@email.com,SC,2025-04-13,2025-04-15,2025-04-18,9,Ótima experiência de entrega
+P026,André Campos,andre.campos@email.com,MG,2025-04-13,2025-04-15,2025-04-19,6,Prazo ok mas faltou comunicação sobre o status
+P027,Bianca Freitas,bianca.freitas@email.com,CE,2025-04-14,2025-04-18,2025-04-26,3,Nordeste sempre com atraso. Precisam melhorar a logística regional
+P028,Caio Ribeiro,caio.ribeiro@email.com,SP,2025-04-14,2025-04-16,2025-04-18,9,Rápido e sem problemas
+P029,Daniela Gomes,daniela.gomes@email.com,PR,2025-04-15,2025-04-17,2025-04-20,8,Entrega no prazo e bem embalado
+P030,Eduardo Nascimento,eduardo.nasc@email.com,BA,2025-04-15,2025-04-19,2025-04-27,4,Atraso significativo. Produto ok mas o prazo não
+P031,Fernanda Castro,fernanda.castro@email.com,RJ,2025-04-16,2025-04-18,2025-04-22,6,Poderia ser mais rápido para o Rio
+P032,Gustavo Pereira,gustavo.pereira@email.com,AM,2025-04-16,2025-04-22,2025-05-02,1,Entrega demorou demais e veio com defeito. Quero devolução
+P033,Helena Duarte,helena.duarte@email.com,SP,2025-04-17,2025-04-19,2025-04-21,10,Impecável como sempre
+P034,Igor Fonseca,igor.fonseca@email.com,GO,2025-04-17,2025-04-20,2025-04-24,7,Dentro do esperado para o Centro-Oeste
+P035,Juliana Correia,juliana.correia@email.com,RS,2025-04-18,2025-04-21,2025-04-26,5,Demorou um pouco mais que o previsto
+P036,Kevin Machado,kevin.machado@email.com,PE,2025-04-18,2025-04-22,2025-04-30,3,Atraso de 12 dias. Inaceitável para uma empresa de logística
+P037,Larissa Azevedo,larissa.azevedo@email.com,MG,2025-04-19,2025-04-21,2025-04-25,7,Serviço satisfatório sem grandes problemas
+P038,Marcos Vinicius,marcos.v@email.com,SP,2025-04-19,2025-04-21,2025-04-23,9,Entrega expressa funcionou perfeitamente
+P039,Natália Borges,natalia.borges@email.com,PA,2025-04-20,2025-04-25,2025-05-04,2,Norte do Brasil é terra de ninguém para essa empresa
+P040,Otávio Reis,otavio.reis@email.com,SC,2025-04-20,2025-04-22,2025-04-25,8,Prazo cumprido e boa embalagem
+P041,Priscila Melo,priscila.melo@email.com,CE,2025-04-21,2025-04-25,2025-05-02,4,Atraso e falta de informação sobre rastreamento
+P042,Renato Souza,renato.souza@email.com,RJ,2025-04-21,2025-04-23,2025-04-27,7,Prazo aceitável para o estado do Rio
+P043,Sabrina Torres,sabrina.torres@email.com,SP,2025-04-22,2025-04-24,2025-04-26,10,Melhor logística que já usei
+P044,Thiago Amaral,thiago.amaral@email.com,BA,2025-04-22,2025-04-26,2025-05-03,3,Mais uma vez atraso para o Nordeste. Já é recorrente
+P045,Ursula Nogueira,ursula.nogueira@email.com,PR,2025-04-23,2025-04-25,2025-04-28,8,Sem reclamações. Entrega pontual
+P046,Vitor Hugo Braga,vitor.braga@email.com,MA,2025-04-23,2025-04-28,2025-05-07,1,Produto extraviado. Tive que abrir reclamação formal
+P047,Wesley Carvalho,wesley.carvalho@email.com,MG,2025-04-24,2025-04-26,2025-04-30,6,Prazo ok mas a caixa veio danificada
+P048,Xuxa Medeiros,xuxa.medeiros@email.com,SP,2025-04-24,2025-04-26,2025-04-28,9,Sempre confiável para São Paulo
+P049,Yasmin Farias,yasmin.farias@email.com,RS,2025-04-25,2025-04-28,2025-05-02,5,Poderia melhorar o prazo para o Sul
+P050,Zeca Pagodinho Jr,zeca.jr@email.com,AM,2025-04-25,2025-04-30,2025-05-10,2,Demora absurda para Manaus. Produto com avaria
+P051,Alice Brito,alice.brito@email.com,SP,2025-04-26,2025-04-28,2025-04-30,10,Entrega perfeita e rápida
+P052,Bernardo Luz,bernardo.luz@email.com,PE,2025-04-26,2025-04-30,2025-05-07,4,Atraso e sem atualização de rastreio
+P053,Cecília Andrade,cecilia.andrade@email.com,GO,2025-04-27,2025-04-30,2025-05-04,7,Dentro do prazo para Goiás
+P054,Davi Moura,davi.moura@email.com,RJ,2025-04-27,2025-04-29,2025-05-02,8,Bom serviço no geral
+P055,Elisa Tavares,elisa.tavares@email.com,CE,2025-04-28,2025-05-02,2025-05-10,3,Nordeste continua com problemas sérios de prazo
+P056,Fábio Guedes,fabio.guedes@email.com,SC,2025-04-28,2025-04-30,2025-05-03,9,Excelente para Santa Catarina
+P057,Gisele Prado,gisele.prado@email.com,BA,2025-04-29,2025-05-03,2025-05-11,4,Atraso de 12 dias. Produto ok mas o prazo não
+P058,Heitor Sampaio,heitor.sampaio@email.com,SP,2025-04-29,2025-05-01,2025-05-03,9,Rápido e confiável
+P059,Iris Cavalcanti,iris.cavalcanti@email.com,PA,2025-04-30,2025-05-05,2025-05-15,2,Região Norte precisa de atenção urgente. 15 dias é demais
+P060,Jorge Alencar,jorge.alencar@email.com,PR,2025-04-30,2025-05-02,2025-05-05,8,Prazo cumprido sem problemas

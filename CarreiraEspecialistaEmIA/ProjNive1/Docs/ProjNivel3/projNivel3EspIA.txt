@@ -1,0 +1,106 @@
+Desafio1:Nivel3
+Categorização Automática de Despesas Bancárias
+Discutir no fórum
+Neste projeto, você atuará como Especialista de IA em um banco digital. 
+Um dos objetivos do banco é ajudar seus clientes a entenderem melhor seus hábitos de consumo. 
+Para isso, o aplicativo precisa categorizar automaticamente as despesas de 
+cada cliente (ex: "Alimentação", "Transporte", "Contas", "Lazer") a partir do texto descritivo da transação.
+
+Seu desafio é usar um modelo de Inteligência Artificial pré-treinado da plataforma 
+Hugging Face ou LLMs para classificar uma lista de transações bancárias. 
+Você utilizará uma técnica poderosa chamada Classificação Zero-Shot, que permite ao modelo 
+classificar textos em categorias que ele nunca viu durante seu treinamento, tornando-a perfeita 
+para nosso problema.
+
+Passo1:
+Preparando o ambiente
+Para este projeto, recomendamos o uso do Google Colab, que já facilita o uso da biblioteca principal. A única biblioteca que você precisará garantir que está instalada e importada é a transformers.
+Em um ambiente como o Colab, você pode começar importando a ferramenta que já conhece: a função pipeline.
+Copiar
+# Célula de preparação
+# Instala a biblioteca, caso necessário. No Colab, geralmente já está disponível.
+# !pip install transformers
+from transformers import pipeline
+import pandas as pd
+
+Passo2:
+Etapa #1
+Como não temos um arquivo de dados, o primeiro passo será criar manualmente uma 
+pequena lista de descrições de transações para simular os dados de um cliente. 
+Em seguida, vamos carregar um modelo de classificação "Zero-Shot" do Hugging Face.
+
+Desafio:
+Crie uma lista em Python com 5 a 10 exemplos de descrições de transações. 
+Seja criativo, misturando diferentes tipos de despesas.
+Defina uma lista com as categorias de despesas que você deseja usar. 
+Por exemplo: ['Alimentação', 'Transporte', 'Contas e Serviços', 'Lazer', 'Compras'].
+Crie uma variável para o seu classificador usando a função pipeline(). 
+A tarefa (task) a ser passada é 'zero-shot-classification'.
+Para o modelo, você pode escolher um que funcione bem em português. 
+Um modelo popular e eficaz para essa tarefa é o vidhur2k/mBERT-Portuguese-Mono.
+
+Passo3:
+Etapa #2
+
+Antes de aplicar o modelo a todos os dados, é uma boa prática testá-lo em um único 
+exemplo para entender como ele funciona e qual o formato da sua saída.
+Desafio:
+Escolha uma das descrições de transação da sua lista.
+Chame o classificador passando a descrição escolhida e a sua lista de categorias_candidatas 
+como parâmetros.
+Observe o resultado. Ele deve retornar uma lista de todas as categorias candidatas com uma 
+pontuação (score) de probabilidade para cada uma.
+
+
+Passo4:
+Etapa #3
+Agora que você sabe como o modelo funciona, sua tarefa final é aplicar o classificador a todas 
+as transações da sua lista e organizar os resultados de forma clara.
+Desafio:
+Crie um laço (for) que percorra cada descrição na sua lista de transacoes.
+Dentro do laço, use o classificador para obter as probabilidades para cada transação.
+O resultado do classificador já vem ordenado do maior para o menor score. Extraia apenas 
+a categoria com a maior pontuação (o primeiro item da lista de labels).
+Armazene a categoria prevista em uma nova lista.
+Ao final, crie um DataFrame do Pandas com duas colunas: "Transação" e "Categoria Prevista", 
+e exiba o resultado final.
+Repare que tanto os modelos do HuggingFace quanto LLMs podem ser utilizados para executar 
+essas tarefas. Isso é possível para uma LLM mesmo que ela não tenha sido diretamente treinada 
+para essa tarefa. Em alguns casos o Fine-tuning pode ajudar a obter melhores resultados.
+
+Passo5:
+Pontos de revisão
+Antes de finalizar, verifique os seguintes pontos:
+Escolha do Modelo: O modelo que você escolheu no Hugging Face é adequado para textos 
+em português? Testar outros modelos poderia trazer resultados diferentes?
+Definição das Categorias: Suas categorias são claras e distintas? O que aconteceria se você 
+tivesse categorias muito parecidas, como "Restaurante" e "Alimentação"?
+Resultados Ambíguos: Observe os scores de probabilidade. Em algum caso a diferença entre 
+a primeira e a segunda categoria mais provável foi pequena? Isso pode indicar uma transação ambígua.
+
+Passo6:
+Encerramento
+Parabéns! Você utilizou com sucesso um modelo de Processamento de Linguagem Natural de 
+última geração para resolver um problema prático e relevante do setor financeiro. 
+O mais impressionante é que você conseguiu criar um categorizador de despesas funcional 
+sem precisar treinar nenhum modelo, apenas aplicando de forma inteligente uma 
+ferramenta pré-treinada.
+
+Isso demonstra o poder das APIs e de plataformas como o Hugging Face, que permitem a criação 
+rápida de soluções de IA sofisticadas. 
+Como próximos passos, você poderia expandir a lista de categorias, testar o sistema com 
+descrições mais complexas e explorar outros modelos de Zero-Shot disponíveis.
+
+Quais suas sugestões para: você poderia expandir a lista de categorias, testar o sistema com 
+descrições mais complexas e explorar outros modelos de Zero-Shot disponíveis.
+
+
+
+
+
+
+
+
+
+
+
