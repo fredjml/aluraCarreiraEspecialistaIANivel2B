@@ -1,0 +1,4 @@
+nome,descricao,url,skills,versao
+agente-conta-corrente,Responde políticas de conta Pix e empréstimo,http://localhost:8001,"conta_corrente,consulta_politica",0.1.0
+agente-cartao-credito,Responde políticas de cartões e faturas,http://localhost:8002,"cartao_credito,consulta_politica,platinum_hitl",0.1.0
+agente-suporte,Orienta canais reclamações e SLAs,http://localhost:8003,"suporte,escalonamento",0.1.0
