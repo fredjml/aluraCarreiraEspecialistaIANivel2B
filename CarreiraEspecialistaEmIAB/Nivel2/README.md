@@ -22,6 +22,8 @@ A jornada começa com políticas internas fictícias e evolui até um protótipo
 - [`src/`](src/): pipeline RAG e protótipo multiagente.
 - [`diagrams/`](diagrams/): diagramas Mermaid versionáveis.
 - [`tests/`](tests/): verificações automatizadas locais.
+- [`scripts/`](scripts/): MCP local, conformidade e geração de relatórios.
+- [`docs/relatorio_implementacao_bytebank.md`](docs/relatorio_implementacao_bytebank.md): evidências, análises, revisões e aceite.
 - [`PLANO_EXECUCAO.md`](PLANO_EXECUCAO.md): plano e critérios de validação.
 
 ## Execução local
@@ -32,6 +34,8 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 python -m src.rag_pipeline --question "Quais são as regras para abrir uma conta?"
 python -m src.multiagent_graph
+python scripts/validate_project.py
+python scripts/generate_reports.py
 ```
 
 O modo padrão é local e determinístico. APIs de LLM, embeddings externos, Google Sheets, GitHub Pages e publicação ficam desabilitados até que sejam configurados conscientemente.
@@ -56,3 +60,7 @@ RAG facilita atualização e rastreabilidade; agentes precisam de contratos clar
 - Resultados de LLM e juiz automático permanecem pendentes quando não há credencial.
 - Não há screenshots de Power BI no workspace.
 - Usuário GitHub, publicação, Google Sheets e GitHub Pages dependem de dados e autorização do usuário.
+
+## Evidências e revisão
+
+As análises estão em [`docs/analises/`](docs/analises/) e as revisões em [`docs/revisoes/`](docs/revisoes/). O relatório `.docx` correspondente é gerado localmente pelo script de relatórios.

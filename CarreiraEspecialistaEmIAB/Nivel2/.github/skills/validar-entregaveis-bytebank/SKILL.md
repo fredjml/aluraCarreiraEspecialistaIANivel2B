@@ -15,6 +15,8 @@ Use esta skill após cada etapa do projeto.
 4. Executar `python -m unittest discover -s tests` para os testes locais.
 5. Procurar links relativos quebrados e menções a credenciais reais.
 6. Registrar limitações e resultados objetivos no relatório da etapa.
+7. Executar `python scripts/validate_project.py` e testar `python scripts/mcp_tools.py` com entradas JSON locais.
+8. Gerar os relatórios Markdown e DOCX somente depois das validações.
 
 ## Limites
 
