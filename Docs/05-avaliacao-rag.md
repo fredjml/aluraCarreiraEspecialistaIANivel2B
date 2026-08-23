@@ -1,8 +1,15 @@
 # Avaliação do pipeline RAG
 
-O conjunto de validação tem oito perguntas em `src/evaluation.py`. Cada execução
-compara uma resposta sem RAG com uma resposta RAG para o mesmo gabarito e grava
-os modos realmente usados em `outputs/avaliacao_rag.csv`.
+O conjunto ativo de validação possui 32 casos versionados em
+`data/avaliacao_rag.csv`. Ele inclui perguntas diretas, paráfrases, múltiplas
+fontes, negativas, tentativas de prompt injection, acesso proibido e regressões.
+Cada execução compara uma resposta sem RAG com uma resposta RAG para o mesmo
+gabarito e grava os modos realmente usados em `outputs/avaliacao_rag.csv`.
+
+A tabela de oito casos abaixo é uma evidência histórica da rodada de
+22/08/2026. Ela não substitui a suíte ativa nem representa uma rodada externa
+integral. As execuções novas usam cache e checkpoint em `outputs/` para retomar
+casos concluídos sem repetir chamadas ao provedor.
 
 ## Fluxo avaliado
 
@@ -32,9 +39,9 @@ A implementação usa a SDK oficial `google-genai` e saída estruturada Pydantic
 para reranking e juiz. O modo `auto` usa Gemini apenas quando encontra a chave;
 o modo `local` proíbe chamadas externas mesmo que uma chave exista.
 
-Uma rodada completa com oito casos realiza até 40 chamadas (baseline,
-reranking, geração RAG e dois julgamentos por caso). Verifique cota, custo e
-política de uso antes de executar em ambiente compartilhado.
+Uma rodada completa com 32 casos realiza até 160 chamadas (baseline, reranking,
+geração RAG e dois julgamentos por caso). Verifique cota, custo e política de
+uso antes de executar em ambiente compartilhado.
 
 ## Execução
 
@@ -49,35 +56,27 @@ python -m src.evaluation --mode gemini
 python -m src.evaluation --mode auto
 ```
 
-## Resultado verificado em 22/08/2026
+## Resultado verificado em 23/08/2026
 
-A execução com `gemini-3.5-flash-lite` e Chroma obteve **1/8 (12,5%) sem RAG** e
-**8/8 (100%) com RAG**. A recuperação usou `chroma_embeddings+lexical_hybrid`
-nos oito casos. A cota do provedor respondeu HTTP 429 após parte da rodada:
-três casos concluíram todas as etapas Gemini e cinco usaram algum fallback local.
-O arquivo versionado `outputs/avaliacao_rag.csv` registra o modo de cada etapa,
-as fontes e os fallbacks; por isso o resultado não é apresentado como uma rodada
-100% Gemini.
+A execução com `gemini-3.5-flash-lite` e Chroma processou os **32 casos** da
+suíte ativa. Obteve **12/32 (37,5%) sem RAG** e **28/32 (87,5%) com RAG**. A
+geração permaneceu no Gemini nos 32 casos; quatro julgamentos acionaram fallback
+local rastreável. Portanto, a rodada demonstra execução externa integral da
+geração, mas não uma avaliação integralmente externa.
 
-### Tabela final de avaliação
+| Indicador | Resultado |
+|---|---:|
+| Casos processados | 32/32 |
+| Acertos sem RAG | 12/32 (37,5%) |
+| Acertos com RAG | 28/32 (87,5%) |
+| Geração Gemini | 32/32 |
+| Juiz com fallback local | 4/32 |
+| Modelo e provedor | `gemini-3.5-flash-lite` / Gemini |
 
-| # | Pergunta | Gabarito | Sem RAG | Com RAG | Fontes RAG | Geração/juiz | Fallback |
-|---:|---|---|---:|---:|---|---|---|
-| 1 | Quais documentos são necessários para abrir conta? | CPF válido, comprovante de residência e documento de identidade | 100 - acerto | 100 - acerto | `id=1`, `id=2`, `id=50`, `id=28` | Gemini/Gemini | Não |
-| 2 | Quanto custa a TED adicional? | R$ 9,90 | 0 - erro | 100 - acerto | `id=3`, `id=30`, `id=25`, `id=36` | Gemini/Gemini | Não |
-| 3 | Qual é a anuidade do cartão Platinum? | R$ 59,90 | 0 - erro | 100 - acerto | `id=9`, `id=36`, `id=11`, `id=45` | Gemini/Gemini | Não |
-| 4 | Qual o limite máximo do cartão Gold? | R$ 20.000 | 0 - erro | 100 - acerto | `id=11`, `id=9`, `id=7`, `id=13` | Local/Local | Sim - HTTP 429 |
-| 5 | Como contestar uma transação não reconhecida? | Em até 48 horas pelo aplicativo | 0 - erro | 100 - acerto | `id=30`, `id=9`, `id=46`, `id=1` | Local/Local | Sim - HTTP 429 |
-| 6 | Qual o prazo para excluir dados pessoais? | 15 dias úteis | 0 - erro | 100 - acerto | `id=28`, `id=5`, `id=26`, `id=50` | Local/Local | Sim - HTTP 429 |
-| 7 | Qual o prazo de resposta da ouvidoria? | 10 dias úteis | 0 - erro | 100 - acerto | `id=15`, `id=37`, `id=5`, `id=28` | Local/Local | Sim - HTTP 429 |
-| 8 | Qual o limite do Pix noturno? | R$ 1.000 por transação | 0 - erro | 100 - acerto | `id=32`, `id=31`, `id=11`, `id=29` | Local/Local | Sim - HTTP 429 |
-| **Total** | **8 casos** | - | **1/8 (12,5%)** | **8/8 (100%)** | **8/8 com fontes** | **3 Gemini; 5 local** | **5/8 casos** |
+O arquivo versionado `outputs/avaliacao_rag.csv` registra fontes, modos,
+métricas e fallbacks por caso. Os quatro fallbacks impedem atribuir o resultado
+ao Gemini como se o julgamento também tivesse sido externo em todos os casos.
 
-“Fallback” indica que ao menos uma etapa solicitada ao Gemini retornou HTTP 429 e
-foi concluída pelo caminho local rastreável. As notas e modos acima foram lidos
-diretamente de `outputs/avaliacao_rag.csv`; o resultado não implica que os oito
-casos tenham sido executados integralmente pelo provedor externo.
-
-O CSV em `outputs/` é ignorado pelo Git porque contém saída de execução, não
-credenciais. Para uma evidência reproduzível, registre também modelo, data,
-parâmetros, quantidade de casos e eventuais limites de cota.
+O CSV em `outputs/` é versionado como evidência de execução e não contém
+credenciais. Cache e checkpoint permanecem ignorados; o CSV registra modelo,
+data, parâmetros, quantidade de casos e eventuais limites de cota.

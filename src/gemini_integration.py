@@ -6,6 +6,9 @@ todo o projeto continua executável de forma local e determinística sem chave.
 from __future__ import annotations
 
 import os
+import random
+import threading
+import time
 from dataclasses import dataclass
 from typing import Any, Literal, Sequence
 
@@ -14,6 +17,32 @@ from pydantic import BaseModel, Field
 
 DEFAULT_MODEL = "gemini-3.5-flash-lite"
 VALID_MODES = {"auto", "gemini", "local"}
+
+
+@dataclass
+class RequestMetrics:
+    requests: int = 0
+    retries: int = 0
+    total_latency_ms: int = 0
+
+
+class RateLimiter:
+    """Limitador local simples por janela deslizante para chamadas ao provedor."""
+
+    def __init__(self, requests_per_minute: int):
+        self.requests_per_minute = max(1, requests_per_minute)
+        self._timestamps: list[float] = []
+        self._lock = threading.Lock()
+
+    def wait(self) -> None:
+        with self._lock:
+            now = time.monotonic()
+            self._timestamps = [value for value in self._timestamps if now - value < 60]
+            if len(self._timestamps) >= self.requests_per_minute:
+                delay = 60 - (now - self._timestamps[0])
+                if delay > 0:
+                    time.sleep(delay)
+            self._timestamps.append(time.monotonic())
 
 
 class GeminiConfigurationError(RuntimeError):
@@ -88,10 +117,18 @@ class GeminiIntegration:
         self.model = model
         self._types = types
         self._client = genai.Client(api_key=api_key)
+        self.metrics = RequestMetrics()
+        self._max_retries = int(os.getenv("BYTEBANK_GEMINI_MAX_RETRIES", "4"))
+        self._backoff_seconds = float(os.getenv("BYTEBANK_GEMINI_BACKOFF_SECONDS", "1"))
+        self._rate_limiter = RateLimiter(
+            int(os.getenv("BYTEBANK_GEMINI_REQUESTS_PER_MINUTE", "12"))
+        )
 
     @classmethod
     def create_from_env(
-        cls, explicit_mode: str | None = None
+        cls,
+        explicit_mode: str | None = None,
+        model_variable: str = "BYTEBANK_GEMINI_MODEL",
     ) -> tuple[GeminiIntegration | None, str | None]:
         """Cria o cliente ou devolve um motivo objetivo para o fallback."""
         try:
@@ -109,17 +146,68 @@ class GeminiIntegration:
         if not api_key:
             return None, "GOOGLE_API_KEY não configurada"
 
-        model = os.getenv("BYTEBANK_GEMINI_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL
+        model = os.getenv(model_variable, "").strip() or os.getenv(
+            "BYTEBANK_GEMINI_MODEL", DEFAULT_MODEL
+        ).strip() or DEFAULT_MODEL
         try:
             return cls(api_key=api_key, model=model), None
         except GeminiConfigurationError as exc:
             return None, str(exc)
 
+    @staticmethod
+    def _retry_after_seconds(error: Exception) -> float | None:
+        retry_after = getattr(error, "retry_after", None)
+        if retry_after is not None:
+            try:
+                return max(0.0, float(retry_after))
+            except (TypeError, ValueError):
+                return None
+        return None
+
+    @staticmethod
+    def _is_rate_limited(error: Exception) -> bool:
+        status = getattr(error, "status_code", None) or getattr(error, "code", None)
+        return status == 429 or "429" in str(error)
+
+    def _generate(self, prompt: str, config: Any):
+        last_error: Exception | None = None
+        for attempt in range(self._max_retries + 1):
+            self._rate_limiter.wait()
+            started = time.monotonic()
+            try:
+                response = self._client.models.generate_content(
+                    model=self.model, contents=prompt, config=config
+                )
+                self.metrics.requests += 1
+                self.metrics.total_latency_ms += int((time.monotonic() - started) * 1000)
+                return response
+            except Exception as error:
+                self.metrics.requests += 1
+                self.metrics.total_latency_ms += int((time.monotonic() - started) * 1000)
+                last_error = error
+                if not self._is_rate_limited(error) or attempt == self._max_retries:
+                    raise
+                self.metrics.retries += 1
+                retry_after = self._retry_after_seconds(error)
+                delay = retry_after if retry_after is not None else (
+                    self._backoff_seconds * (2**attempt) + random.uniform(0, 0.25)
+                )
+                time.sleep(delay)
+        raise RuntimeError("tentativas Gemini esgotadas") from last_error
+
+    def metrics_snapshot(self) -> dict[str, int | str]:
+        return {
+            "provider": "gemini",
+            "model": self.model,
+            "requests": self.metrics.requests,
+            "retries": self.metrics.retries,
+            "latency_ms": self.metrics.total_latency_ms,
+        }
+
     def _structured(self, prompt: str, schema: type[BaseModel]) -> BaseModel:
-        response = self._client.models.generate_content(
-            model=self.model,
-            contents=prompt,
-            config=self._types.GenerateContentConfig(
+        response = self._generate(
+            prompt,
+            self._types.GenerateContentConfig(
                 temperature=0,
                 response_mime_type="application/json",
                 response_schema=schema,
@@ -134,10 +222,8 @@ class GeminiIntegration:
         return schema.model_validate_json(text)
 
     def _text(self, prompt: str) -> str:
-        response = self._client.models.generate_content(
-            model=self.model,
-            contents=prompt,
-            config=self._types.GenerateContentConfig(temperature=0),
+        response = self._generate(
+            prompt, self._types.GenerateContentConfig(temperature=0)
         )
         text = getattr(response, "text", "")
         if not text or not text.strip():

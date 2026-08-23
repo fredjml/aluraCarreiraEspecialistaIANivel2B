@@ -1,9 +1,11 @@
 import unittest
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 from src.evaluation import evaluate, summarize
 from src.gemini_integration import JudgeDecision
+from src.identity import Identity
 from src.rag_pipeline import load_documents, query, split_documents
 
 
@@ -76,16 +78,30 @@ class RagPipelineTests(unittest.TestCase):
         self.assertIn("GOOGLE_API_KEY não configurada", result["fallbacks"][0])
 
     def test_evaluation_compares_both_paths_and_records_judge(self):
-        rows = evaluate(
-            self.csv_path,
-            llm_mode="gemini",
-            gemini=FakeGemini(),
-            retrieval_backend="lexical",
-        )
+        with TemporaryDirectory() as directory:
+            cache_path = Path(directory) / "cache.json"
+            checkpoint_path = Path(directory) / "checkpoint.json"
+            rows = evaluate(
+                self.csv_path,
+                llm_mode="gemini",
+                gemini=FakeGemini(),
+                retrieval_backend="lexical",
+                cache_path=cache_path,
+                checkpoint_path=checkpoint_path,
+            )
+            cached_rows = evaluate(
+                self.csv_path,
+                llm_mode="gemini",
+                gemini=FakeGemini(),
+                retrieval_backend="lexical",
+                cache_path=cache_path,
+                checkpoint_path=checkpoint_path,
+            )
         summary = summarize(rows)
-        self.assertEqual(len(rows), 8)
-        self.assertEqual(summary["acertos_sem_rag"], 8)
-        self.assertEqual(summary["acertos_com_rag"], 8)
+        self.assertEqual(len(rows), 32)
+        self.assertEqual(rows, cached_rows)
+        self.assertEqual(summary["acertos_sem_rag"], 32)
+        self.assertEqual(summary["acertos_com_rag"], 32)
         self.assertTrue(all(row["modo_juiz"] == "gemini" for row in rows))
 
     def test_public_access_filter_excludes_internal_policies(self):
@@ -119,6 +135,42 @@ class RagPipelineTests(unittest.TestCase):
             result["retrieval_mode"], "chroma_embeddings+lexical_hybrid"
         )
         self.assertEqual(result["allowed_levels"], ["publico"])
+
+    def test_reranking_preserves_authorized_candidates(self):
+        class InternalStore:
+            def search(self, question, k, allowed_levels):
+                documents = split_documents(load_documents(self_path))
+                return [
+                    document
+                    for document in documents
+                    if document.metadata["nivel_acesso"] == "interno"
+                ][:k]
+
+        self_path = self.csv_path
+        result = query(
+            self.csv_path,
+            "Qual o prazo de resposta da ouvidoria?",
+            retrieval_backend="chroma",
+            vector_store=InternalStore(),
+            identity=Identity("analista-ficticio", frozenset({"analista"}), frozenset({"publico", "interno", "restrito"})),
+            allowed_levels={"interno"},
+        )
+        self.assertTrue(result["source_documents"])
+        self.assertTrue(
+            all(
+                document.metadata["nivel_acesso"] == "interno"
+                for document in result["source_documents"]
+            )
+        )
+
+    def test_rag_rejects_level_not_granted_by_identity(self):
+        with self.assertRaises(PermissionError):
+            query(
+                self.csv_path,
+                "Prazo da ANPD",
+                retrieval_backend="lexical",
+                allowed_levels={"restrito"},
+            )
 
 
 if __name__ == "__main__":
