@@ -258,28 +258,6 @@ Portfólio: Se você tem um portfólio online, adicione este projeto como um dos
 capacidade de ir do dado bruto à recomendação estratégica.
 
 
-aluraCarreiraEspecialistaIANivel1B
-Especialista em IA Nivel 1
-
-Prompt1:
-Analise profundamente o desafio a seguir e verifique quais são os conhecimentos necessários para realização do mesmo inclusive sua 
-persona e os softwares necessários para serem instalados. 
-Pra cada etapa estão descritos topicos como: Contexto, Pergunta-chave, Sua missão, Ferramentas e
-Dicas de troubleshooting para cada etapa. Entenda profundamente cada tópico, instale todas a ferramentas necessárias 
-ao desafio bem como elabore e informe todas as dependências de decisões humanas.Crie rules, skill, arquivos .md e o que mais 
-for necessário para que na implementação não seja mais necessário descrver o desafio nem gastar token de entrada para isso.
-Crie escripts de MCP para as ferramentas que não possuir acesso para construir os artefatos bem como fazer as revisões 
-e testes  de validação e conformidade para enterga. Gere um relatório executivo .docx com as características do anexo 
-colocando este relatório no diretório Docs que vc criará com tais informações bem como um relatório equivalente .md 
-também no diretório Docs.Utilize estes .md para qualquer dúvida antes de gastar tokens de entrada. 
-Neste momento vc não executará nada só fará um estudo detalhado do desafio e irá gerar as informações nos arquivos 
-de relatório com detalhes. Analise também com profundidade o arquivo em anexo.
-Antes de responder e montar suas resposta com tais informações faça 3 análises da sua resposta bem como 3 revisões 
-de sua resposta para aumentar a qualidade da mesma e evitar não colocar algum detalhe relevante. Diga também se 
-podes executar a implementação direto, caso não, forneça as decisões que eu preciso tomar para que vc possa 
-executar tudo direto, as 4 etapas ou caso vc decida fazer por etapa. Idependente disto divida as atividades em tasks e 
-depois agupe no máximo 6 tasks em fases a menos que fique nuito grande. 
-A seguir o desafio:
 
 
 
