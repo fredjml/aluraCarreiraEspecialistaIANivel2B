@@ -8,3 +8,4 @@ outputs/*
 !outputs/avaliacao_rag.csv
 .DS_Store
 tmp/
+QuestionarioEspIANivel2B.pdf
