@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Projeto fictício Bytebank: governança de IA, RAG auditável e arquitetura multiagente.">
-  <title>Bytebank AI Ecosystem | Nivel 2</title>
+  <title>Bytebank AI Ecosystem | Nível 2</title>
   <style>
     :root { --ink: #172033; --teal: #007c7a; --paper: #f7faf9; --line: #cbd8d5; }
     * { box-sizing: border-box; }
@@ -20,6 +20,16 @@
     a { color: #005f5d; }
     nav a { display: block; min-height: 72px; padding: 18px; border: 1px solid var(--line); background: #fff; text-decoration: none; font-family: "Trebuchet MS", sans-serif; font-weight: 700; }
     nav a:hover, nav a:focus { outline: 3px solid #f0bf57; outline-offset: 2px; }
+    .table-wrap { overflow-x: auto; background: #fff; border: 1px solid var(--line); }
+    table { width: 100%; border-collapse: collapse; font-family: "Trebuchet MS", sans-serif; }
+    th, td { padding: 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; line-height: 1.45; }
+    th { background: #e8f2f0; }
+    tr:last-child td { border-bottom: 0; }
+    .status { color: #116149; font-weight: 700; white-space: nowrap; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+    .metric { padding: 18px; border: 1px solid var(--line); background: #fff; }
+    .metric strong { display: block; margin-bottom: 6px; color: var(--teal); font: 700 1.45rem "Trebuchet MS", sans-serif; }
+    .publication { padding: 18px; border-left: 5px solid #16805b; background: #e7f6ef; }
     footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); font-size: .95rem; }
     @media (max-width: 520px) { main { padding: 36px 18px 48px; } h1 { font-size: 2rem; } }
   </style>
@@ -32,16 +42,40 @@
       <p>Projeto fictício que une governança, recuperação aumentada por geração e agentes especializados para atendimento bancário digital auditável.</p>
     </header>
 
-    <h2>Documentação</h2>
-    <nav aria-label="Documentação do projeto">
-      <a href="README.md">Visão geral do projeto</a>
-      <a href="docs/01-governanca.md">Governança, ética e LLM Ops</a>
-      <a href="docs/02-arquitetura-rag.md">Arquitetura RAG e decisões</a>
-      <a href="docs/04-arquitetura-multiagente.md">Multiagentes, A2A, MCP e HITL</a>
-      <a href="docs/05-avaliacao-rag.md">Avaliação do pipeline RAG</a>
-      <a href="docs/06-integracoes-mcp.md">Integrações MCP e pendências</a>
-      <a href="docs/relatorio_implementacao_bytebank.md">Relatório de implementação</a>
+    <h2>Entregáveis para avaliação</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Entregável</th><th>Evidências</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Governança e time de IA</td><td><a href="Docs/01-governanca.md">Documento</a>, <a href="data/composicao_time.csv">composição</a>, <a href="data/carreira_y.csv">carreira em Y</a> e <a href="https://docs.google.com/spreadsheets/d/1jJYN5SKQHZzNuuFBLDupMnQATMTfR3QBgl82MX-CJiE/edit?usp=sharing">planilha Google</a></td><td class="status">Concluído</td></tr>
+          <tr><td>2</td><td>Arquitetura RAG e glossário</td><td><a href="Docs/02-arquitetura-rag.md">ADR</a>, <a href="diagrams/rag.mmd">Mermaid</a>, <a href="diagrams/rag.svg">SVG</a> e <a href="data/glossario_rag.csv">glossário</a></td><td class="status">Concluído</td></tr>
+          <tr><td>3</td><td>Pipeline RAG funcional</td><td><a href="src/rag_pipeline.py">Código</a>, <a href="data/politicas_bytebank.csv">50 políticas</a>, <a href="outputs/avaliacao_rag.csv">avaliação</a> e <a href="tests/test_rag_pipeline.py">testes</a></td><td class="status">Concluído</td></tr>
+          <tr><td>4</td><td>Arquitetura multiagente</td><td><a href="Docs/04-arquitetura-multiagente.md">Documento</a>, <a href="diagrams/multiagente.svg">SVG</a>, <a href="src/multiagent_graph.py">grafo</a> e <a href="scripts/bytebank_mcp_server.py">MCP</a></td><td class="status">Concluído</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Resultado validado</h2>
+    <section class="metrics" aria-label="Resultados da validação">
+      <div class="metric"><strong>1/8</strong>acertos sem RAG</div>
+      <div class="metric"><strong>8/8</strong>acertos com RAG</div>
+      <div class="metric"><strong>13/13</strong>testes aprovados</div>
+      <div class="metric"><strong>OK</strong>conformidade estrutural</div>
+    </section>
+
+    <h2>Documentação e relatórios</h2>
+    <nav aria-label="Documentação complementar do projeto">
+      <a href="README.md">README completo</a>
+      <a href="Docs/05-avaliacao-rag.md">Avaliação do pipeline RAG</a>
+      <a href="Docs/06-integracoes-mcp.md">Integrações MCP e limites</a>
+      <a href="Docs/relatorio_levantamento_bytebank.md">Levantamento · Markdown</a>
+      <a href="Docs/relatorio_levantamento_bytebank.docx">Levantamento · DOCX</a>
+      <a href="Docs/relatorio_implementacao_bytebank.md">Implementação · Markdown</a>
+      <a href="Docs/relatorio_implementacao_bytebank.docx">Implementação · DOCX</a>
     </nav>
+
+    <h2>Publicação</h2>
+    <p class="publication">Os quatro entregáveis foram integrados à <code>main</code> pelo <a href="https://github.com/fredjml/aluraCarreiraEspecialistaIANivel2B/pull/1">PR #1</a> e publicados neste portfólio.</p>
 
     <footer>Todos os dados e políticas apresentados neste projeto são fictícios.</footer>
   </main>

@@ -14,7 +14,7 @@ from docx.shared import Cm, Inches, Pt, RGBColor
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DOCS = ROOT / "docs"
+DOCS = ROOT / "Docs"
 REPORTS = (
     ("relatorio_levantamento_bytebank.md", "Levantamento", "Requisitos, lacunas, decisões e controles"),
     ("relatorio_implementacao_bytebank.md", "Implementação", "Evidências técnicas e prontidão para avaliação"),
