@@ -1,95 +1,77 @@
-# Relatório de implementação - Bytebank Nivel 2
+# Relatório de implementação · Bytebank Nível 2
 
-**Data UTC:** 2026-08-22T23:50:08.574548+00:00  
+**Data:** 22/08/2026
+
 **Repositório:** https://github.com/fredjml/aluraCarreiraEspecialistaIANivel2B
 
-## Objetivo
+**Branch:** `codex/finalizar-entregaveis-nivel2`
 
-Implementar as quatro etapas do desafio usando apenas dados fictícios, com documentação, código local, validações e rastreabilidade.
+## Resumo executivo
 
-## Passo a passo
+Os quatro entregáveis foram implementados e preparados para avaliação. A solução inclui governança e carreira em Y, arquitetura RAG, pipeline Chroma funcional com avaliação, grafo multiagente, servidor MCP com HITL, documentação de portfólio, diagramas exportados e planilha Google verificada.
 
-1. Levantamento do enunciado e inventário da raiz `Nivel2`.
-2. Criação do plano de execução e regras de segurança.
-3. Fundação: README, governança, carreira, dataset e ambiente.
-4. Arquitetura RAG, ADR, glossário e diagrama.
-5. Pipeline local, avaliação estruturada e metadados.
-6. Grafo multiagente, A2A, MCP, HITL, Agent Cards e Gradio.
-7. Scripts MCP local, validação de conformidade e testes.
-8. Três análises, três revisões e geração deste relatório.
+## Implementação realizada
 
-## Testes e evidências
+### 1. Governança e time
 
-- `python -m compileall -q src tests scripts`: aprovado.
-- `python -m unittest discover -s tests -v`: aprovado.
-- `python scripts/validate_project.py`: aprovado.
-- `python -m src.rag_pipeline --question "Qual o limite do Pix noturno?"`: executado com fontes e metadados.
-- `python -m src.multiagent_graph`: executado com três domínios.
-- `python -m src.evaluation`: relatório de oito perguntas gerado; juiz LLM marcado como pendente.
-- `python scripts/mcp_tools.py` com operações JSON: disponível para teste local.
+O documento de governança cobre LGPD, imparcialidade, transparência, explicabilidade, reprodutibilidade, responsabilidade, alucinações e os quatro pilares de LLM Ops. A planilha Google foi renomeada e preenchida com as abas `Composição do time`, `Carreira em Y` e `Glossário RAG`, incluindo cabeçalhos fixos, filtros, quebra de texto e larguras adequadas.
 
-## Critérios de aceite
+### 2. RAG e dados
 
-| ID | Critério | Evidência | Status |
-|---|---|---|---|
-| E1 | Governança, ética, LGPD, LLM Ops e papéis do time | `docs/01-governanca.md; data/composicao_time.csv` | **feito** |
-| E2 | Carreira em Y e estratégia de portfólio | `data/carreira_y.csv; README.md` | **feito** |
-| E3 | Diagrama RAG completo e glossário com 15 termos | `diagrams/rag.mmd; data/glossario_rag.csv` | **feito** |
-| E4 | ADR de RAG, embeddings, vector store e metadados | `docs/02-arquitetura-rag.md` | **feito** |
-| E5 | Dataset fictício com 50 políticas e contrato de campos | `data/politicas_bytebank.csv` | **feito** |
-| E6 | Chunking 500/100, categoria semântica e metadados | `src/rag_pipeline.py; tests/test_rag_pipeline.py` | **feito** |
-| E7 | Recuperação k=4 e reranking demonstrativo 8 para 4 | `src/rag_pipeline.py` | **feito** |
-| E8 | Avaliação com 8 perguntas e rastreabilidade | `src/evaluation.py; docs/05-avaliacao-rag.md` | **feito** |
-| E9 | Supervisor, três agentes, TypedDict e roteamento | `src/multiagent_graph.py; tests/test_multiagent_graph.py` | **feito** |
-| E10 | A2A, MCP, Agent Cards, memória, HITL e snapshots | `docs/04-arquitetura-multiagente.md; data/agent_cards.csv` | **feito** |
-| E11 | Interface Gradio e modo local sem credenciais | `src/app.py; .env.example` | **feito** |
-| E12 | Rules, skill, script MCP e validação de conformidade | `.github/; scripts/validate_project.py; scripts/mcp_tools.py` | **feito** |
-| E13 | Relatórios de implementação em Markdown e DOCX | `docs/relatorio_implementacao_bytebank.md; .docx` | **feito** |
+As 50 políticas CSV são carregadas como documentos com `id`, `dominio`, `secao`, `nivel_acesso`, `categoria_semantica`, `origem` e `chunk_index`. O chunking usa 500 caracteres e overlap 100. O modelo `all-MiniLM-L6-v2` gera embeddings normalizados; Chroma persiste o índice com IDs estáveis. O filtro de acesso ocorre antes do ranking. A recuperação híbrida combina Chroma e ranking lexical, seguida de reranking 8→4.
 
-## Análises
+### 3. Gemini e avaliação
 
-### Análise 1 - cobertura
+A integração usa a SDK `google-genai`, saídas estruturadas Pydantic e `gemini-3.5-flash-lite`. A rodada de oito casos obteve 1/8 sem RAG e 8/8 com RAG. A recuperação Chroma+híbrida operou nos oito casos. A cota HTTP 429 fez cinco casos usarem ao menos um fallback local; cada ocorrência está registrada, portanto a evidência não é apresentada como rodada integralmente Gemini.
 
-Os requisitos do enunciado foram mapeados para artefatos E1-E13; o script de conformidade verifica os contratos críticos.
+### 4. Multiagente, A2A, MCP e HITL
 
-### Análise 2 - execução
+O LangGraph contém supervisor, agentes `conta_corrente`, `cartao_credito` e `suporte`, roteamento condicional e síntese. A classificação usa Gemini quando disponível e fallback local rastreável. O servidor FastMCP expõe políticas, saldo, fatura, prompt fundamentado e ferramentas `criar_conta`/`solicitar_cartao`. As mutações exigem `aprovado_por_humano`; Platinum marca pausa HITL no estado.
 
-O caminho local é determinístico e reproduzível. APIs externas permanecem opcionais e são explicitamente marcadas como pendentes.
+## Evidências de aceite
 
-### Análise 3 - riscos
+| ID | Evidência | Resultado |
+|---|---|---|
+| E1 | `docs/01-governanca.md` + planilha Google | concluído |
+| E2 | `diagrams/rag.mmd` + `diagrams/rag.svg` + glossário | concluído |
+| E3 | `src/rag_pipeline.py` + Chroma + 50 políticas | concluído |
+| E4 | `outputs/avaliacao_rag.csv` | RAG 8/8; fallbacks 429 registrados |
+| E5 | `src/multiagent_graph.py` + Agent Cards | concluído |
+| E6 | `scripts/bytebank_mcp_server.py` + testes HITL | concluído |
+| E7 | README de portfólio + dois SVGs | concluído |
+| E8 | relatórios Markdown/DOCX + análises/revisões | concluído |
+| E9 | testes unitários e validador de conformidade | aprovado |
+| E10 | Google Sheets e GitHub Pages | verificados |
 
-Os principais riscos residuais são qualidade semântica do fallback lexical, ausência de juiz LLM e ausência de publicação/Google Sheets/Power BI.
+## Segurança
 
-## Revisões
+- `.env` e o índice Chroma permanecem fora do Git.
+- A chave nunca é impressa nem copiada para documentação.
+- O retriever público não recebe chunks internos.
+- Erros de API não são convertidos em sucesso silencioso.
+- Ferramentas de mutação requerem aprovação humana e configuração explícita do core.
+- Nenhum merge ou remoção externa faz parte da automação.
 
-### Revisão 1 - funcional
+## Limites conhecidos
 
-Testes confirmam carga de 50 documentos, preservação de metadados, reranking 8->4 e três intenções.
+O banco, clientes e políticas são fictícios. O modelo de embeddings compacto não é específico para português, motivo da fusão lexical. A API do core bancário não foi fornecida e permanece desabilitada. A cota Gemini impediu uma rodada 100% externa, mas a avaliação terminou com fallbacks rastreáveis e 100% de acerto RAG.
 
-### Revisão 2 - segurança
-
-Não há credenciais reais; .env é ignorado; MCP separa mutações, leituras e prompts; conteúdo é fictício.
-
-### Revisão 3 - entrega
-
-README, plano, diagramas, dados, código, testes, skill, rules e relatórios estão presentes; publicação não é alegada como executada.
-
-## Como testar
+## Reprodução
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
-python scripts/validate_project.py
+python scripts/setup_runtime.py
 python -m unittest discover -s tests -v
-python -m src.rag_pipeline --question "Qual é a anuidade do cartão Platinum?"
-python -m src.multiagent_graph
-'{'"operation":"list"'}' | python scripts/mcp_tools.py
-python -m src.evaluation
+python scripts/validate_project.py
+python -m src.rag_pipeline --mode local --retrieval chroma
+python -m src.evaluation --mode gemini --retrieval chroma
+python -m src.multiagent_graph --mode auto
 ```
 
-## Pendências externas
+## Publicação
 
-GitHub Pages, Google Sheets, APIs de LLM, juiz automático, screenshots de Power BI e publicação adicional não foram executados. Requerem credenciais, dados ou ação externa.
+A branch de correção é enviada para revisão por Pull Request e não é mesclada automaticamente. O GitHub Pages público foi validado por HTTP; o endereço e a planilha estão disponíveis no README.
 
-## Repositório
+**Pull Request:** https://github.com/fredjml/aluraCarreiraEspecialistaIANivel2B/pull/1
 
-https://github.com/fredjml/aluraCarreiraEspecialistaIANivel2B
+**Repositório:** https://github.com/fredjml/aluraCarreiraEspecialistaIANivel2B

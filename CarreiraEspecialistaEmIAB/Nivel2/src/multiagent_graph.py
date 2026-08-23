@@ -1,7 +1,10 @@
-"""Protótipo multiagente local, com LangGraph opcional e roteamento exato."""
+"""Protótipo multiagente com LangGraph, classificação Gemini e fallback local."""
 from __future__ import annotations
 
-from typing import TypedDict
+import argparse
+from typing import Any, TypedDict
+
+from .gemini_integration import GeminiIntegration, resolve_mode
 
 try:
     from langgraph.graph import END, START, StateGraph
@@ -44,17 +47,53 @@ class AgentState(TypedDict, total=False):
     classificacao: str
     resposta_agente: str
     resposta_final: str
+    modo_classificacao: str
+    fallbacks: list[str]
+    requer_aprovacao_humana: bool
+
+
+def classify_local(message: str) -> str:
+    """Classificador determinístico usado em testes e fallback auditável."""
+    message = message.lower()
+    if any(word in message for word in ("cartão", "cartao", "fatura", "platinum", "anuidade")):
+        return "cartao_credito"
+    if any(word in message for word in ("conta", "pix", "ted", "saldo", "empréstimo", "emprestimo")):
+        return "conta_corrente"
+    return "suporte"
+
+
+def make_classifier(client: Any | None = None):
+    def classify(state: AgentState) -> AgentState:
+        message = state["mensagem"]
+        fallbacks = list(state.get("fallbacks", []))
+        if client is not None:
+            try:
+                return {
+                    "classificacao": client.classify_intent(message),
+                    "modo_classificacao": "gemini",
+                    "fallbacks": fallbacks,
+                }
+            except Exception as exc:
+                fallbacks.append(
+                    f"classificação Gemini: {type(exc).__name__}: {exc}"
+                )
+        return {
+            "classificacao": classify_local(message),
+            "modo_classificacao": "local_deterministic",
+            "fallbacks": fallbacks,
+        }
+
+    return classify
 
 
 def classify(state: AgentState) -> AgentState:
+    """Compatibilidade pública: executa o classificador local."""
     message = state["mensagem"].lower()
-    if any(word in message for word in ("cartão", "cartao", "fatura", "platinum", "anuidade")):
-        intent = "cartao_credito"
-    elif any(word in message for word in ("conta", "pix", "ted", "saldo", "empréstimo", "emprestimo")):
-        intent = "conta_corrente"
-    else:
-        intent = "suporte"
-    return {"classificacao": intent}
+    return {
+        "classificacao": classify_local(message),
+        "modo_classificacao": "local_deterministic",
+        "fallbacks": list(state.get("fallbacks", [])),
+    }
 
 
 def conta_corrente(state: AgentState) -> AgentState:
@@ -62,7 +101,16 @@ def conta_corrente(state: AgentState) -> AgentState:
 
 
 def cartao_credito(state: AgentState) -> AgentState:
-    return {"resposta_agente": "Agente cartao_credito: consultei regras de cartão; Platinum exige análise e pode requerer HITL."}
+    platinum = "platinum" in state["mensagem"].lower()
+    status = (
+        "solicitação pausada até aprovação humana (HITL)"
+        if platinum
+        else "consulta de regras concluída"
+    )
+    return {
+        "resposta_agente": f"Agente cartao_credito: {status}.",
+        "requer_aprovacao_humana": platinum,
+    }
 
 
 def suporte(state: AgentState) -> AgentState:
@@ -77,9 +125,22 @@ def synthesize(state: AgentState) -> AgentState:
     return {"resposta_final": f"[{state['classificacao']}] {state['resposta_agente']}"}
 
 
-def build_graph():
+def build_graph(llm_mode: str = "local", gemini: Any | None = None):
+    requested_mode = resolve_mode(llm_mode)
+    client = gemini if requested_mode == "gemini" else None
+    initialization_fallback: list[str] = []
+    if requested_mode == "gemini" and client is None:
+        client, reason = GeminiIntegration.create_from_env("gemini")
+        if reason:
+            initialization_fallback.append(f"inicialização Gemini: {reason}")
+
     graph = StateGraph(AgentState)
-    graph.add_node("classificar", classify)
+    classifier = make_classifier(client)
+
+    def classify_with_initialization(state: AgentState) -> AgentState:
+        return classifier({**state, "fallbacks": initialization_fallback})
+
+    graph.add_node("classificar", classify_with_initialization)
     graph.add_node("conta_corrente", conta_corrente)
     graph.add_node("cartao_credito", cartao_credito)
     graph.add_node("suporte", suporte)
@@ -98,8 +159,18 @@ def draw_mermaid() -> str:
 
 
 if __name__ == "__main__":
-    app = build_graph()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mode", choices=("auto", "local", "gemini"), default="auto")
+    args = parser.parse_args()
+    app = build_graph(llm_mode=args.mode)
     for message in ("Como faço um Pix?", "Qual a regra do cartão Platinum?", "Quais canais de suporte existem?"):
         result = app.invoke({"mensagem": message})
-        print(result["classificacao"], "->", result["resposta_final"])
+        print(
+            result["classificacao"],
+            f"({result['modo_classificacao']})",
+            "->",
+            result["resposta_final"],
+        )
+        for fallback in result.get("fallbacks", []):
+            print("Fallback:", fallback)
     print(draw_mermaid())

@@ -1,5 +1,10 @@
 # Análise 1: cobertura de requisitos
 
-A implementação cobre as quatro etapas do enunciado: governança e carreira; arquitetura RAG; pipeline com avaliação; e arquitetura multiagente. A cobertura é rastreada no relatório principal por critérios E1-E13 e validada por `scripts/validate_project.py`.
+A implementação cobre as quatro etapas: governança e carreira; arquitetura RAG;
+pipeline Chroma com avaliação; e arquitetura multiagente. A planilha Google tem
+as três abas exigidas e verificadas. Gemini participa de baseline, reranking,
+geração e juiz, com fallback por componente. SVGs, README, MCP e relatórios
+completam as evidências documentais e executáveis.
 
-**Conclusão:** cobertura documental e estrutural confirmada. Integrações externas não são consideradas concluídas sem execução comprovada.
+**Conclusão:** os quatro entregáveis possuem evidência local e externa. O CSV
+mantém a distinção entre etapas Gemini e fallback, evitando atribuição indevida.

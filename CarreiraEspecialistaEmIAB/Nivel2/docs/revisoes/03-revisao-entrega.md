@@ -2,6 +2,10 @@
 
 **Escopo:** documentação, diagramas, código, testes, rules, skill, scripts e relatórios.
 
-**Resultado:** aprovada para entrega local. O script de conformidade verifica arquivos, CSVs, sintaxe, metadados, roteamento e reranking.
+**Resultado:** pronta para avaliação. A inspeção confirmou arquivos obrigatórios,
+50 políticas, diagramas Mermaid/SVG, relatórios Markdown/DOCX, links externos,
+planilha preenchida e ausência de credenciais versionadas.
 
-**Pendente:** Google Sheets, GitHub Pages, juiz LLM, screenshots Power BI e serviços remotos. Esses itens dependem de acesso externo e permanecem explicitamente marcados.
+**Limites externos:** o core bancário de homologação não foi fornecido e permanece
+desabilitado. A rodada Gemini foi executada, com cota 429 registrada. Power BI
+não integra os quatro entregáveis definidos para esta entrega.

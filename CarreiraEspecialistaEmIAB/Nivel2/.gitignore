@@ -4,5 +4,7 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 chroma_db/
-outputs/
+outputs/*
+!outputs/avaliacao_rag.csv
 .DS_Store
+tmp/

@@ -14,7 +14,7 @@ A fonte inicial é `data/politicas_bytebank.csv`. Cada linha vira um `Document` 
 
 ## Embeddings
 
-O modo demonstrativo usa vetores locais determinísticos por tokens, adequado para testes sem enviar conteúdo a terceiros. Em produção, comparar um modelo open source hospedado sob controle do banco com um provedor proprietário. Critérios: janela de entrada, dimensão do vetor, português e multilíngue, latência, custo, residência e política de retenção. A escolha deve ser comprovada por benchmark de recall e risco, não por preferência nominal.
+O pipeline usa `sentence-transformers/all-MiniLM-L6-v2` localmente, com execução offline após o download inicial. Os vetores são normalizados antes da indexação. Como o modelo é compacto e não é especializado em português, a recuperação combina o ranking vetorial do Chroma com um ranking lexical por Reciprocal Rank Fusion; essa decisão reduz falsos negativos sem enviar políticas a terceiros. Em produção, deve-se comparar um modelo multilíngue hospedado sob controle do banco com provedores autorizados, medindo recall, latência, custo, residência e retenção.
 
 ## Vector store
 
@@ -26,11 +26,11 @@ O modo demonstrativo usa vetores locais determinísticos por tokens, adequado pa
 
 ## Recuperação e reranking
 
-A busca inicial é similarity search com `k=4`. Para o fluxo de reranking, recuperar oito candidatos, pontuar relevância por LLM quando habilitado e selecionar quatro. Sem LLM, o fallback lexical determinístico mantém a demonstração reproduzível e não deve ser descrito como avaliação de modelo.
+A busca inicial no Chroma usa similaridade de cosseno com `k=4`; em paralelo, oito candidatos vetoriais são fundidos com os oito melhores lexicais e reduzidos a oito candidatos únicos. O reranker Gemini, quando habilitado, ordena esses oito e seleciona quatro. Sem LLM, o reranker lexical determinístico mantém a demonstração reproduzível. O índice persistente fica em `outputs/chroma_db` e usa IDs estáveis para `upsert` idempotente.
 
 ## Metadados e segurança
 
-Cada chunk conserva `id`, `dominio`, `secao`, `nivel_acesso`, `categoria_semantica`, `origem` e `chunk_index`. Eles permitem filtrar por domínio, seção e nível de acesso antes da geração, facilitam auditoria e explicam de qual trecho veio a resposta. A autorização do usuário deve ser aplicada antes do retriever, nunca depois da resposta.
+Cada chunk conserva `id`, `dominio`, `secao`, `nivel_acesso`, `categoria_semantica`, `origem` e `chunk_index`. O parâmetro `allowed_levels` é convertido em filtro `where` no Chroma e também aplicado ao fallback lexical antes do ranking. A consulta pública usa somente `publico`; conteúdo `interno` jamais entra no contexto por padrão.
 
 ## Rastreamento
 

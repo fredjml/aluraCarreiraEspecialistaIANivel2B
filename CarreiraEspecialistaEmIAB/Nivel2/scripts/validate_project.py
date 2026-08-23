@@ -17,12 +17,14 @@ REQUIRED = [
     "data/glossario_rag.csv", "data/agent_cards.csv",
     "docs/01-governanca.md", "docs/02-arquitetura-rag.md",
     "docs/04-arquitetura-multiagente.md", "docs/05-avaliacao-rag.md",
+    "docs/relatorio_levantamento_bytebank.md", "docs/relatorio_levantamento_bytebank.docx",
     "docs/relatorio_implementacao_bytebank.md", "docs/relatorio_implementacao_bytebank.docx",
     "docs/analises/01-cobertura-requisitos.md", "docs/analises/02-execucao-tecnica.md",
     "docs/analises/03-riscos-residuais.md", "docs/revisoes/01-revisao-funcional.md",
     "docs/revisoes/02-revisao-seguranca.md", "docs/revisoes/03-revisao-entrega.md",
-    "diagrams/rag.mmd", "diagrams/multiagente.mmd",
-    "src/rag_pipeline.py", "src/evaluation.py", "src/multiagent_graph.py", "src/app.py",
+    "diagrams/rag.mmd", "diagrams/rag.svg", "diagrams/multiagente.mmd", "diagrams/multiagente.svg",
+    "src/rag_pipeline.py", "src/gemini_integration.py", "src/evaluation.py",
+    "src/multiagent_graph.py", "src/app.py",
 ]
 
 
@@ -71,7 +73,11 @@ def check_contracts() -> list[str]:
     required = {"id", "dominio", "secao", "nivel_acesso", "categoria_semantica"}
     if not required.issubset(chunks[0].metadata):
         errors.append("metadados obrigatórios não preservados")
-    result = query(ROOT / "data/politicas_bytebank.csv", "Qual o limite do Pix noturno?")
+    result = query(
+        ROOT / "data/politicas_bytebank.csv",
+        "Qual o limite do Pix noturno?",
+        llm_mode="local", retrieval_backend="lexical",
+    )
     if result["reranked_candidates"] != 8 or result["reranked_selected"] != 4:
         errors.append("contrato de reranking 8 para 4 não atendido")
     return errors

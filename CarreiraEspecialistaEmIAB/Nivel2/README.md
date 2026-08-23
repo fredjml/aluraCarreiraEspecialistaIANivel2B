@@ -1,66 +1,110 @@
-# Bytebank AI Ecosystem | Nivel 2
+# Bytebank AI Ecosystem · Nível 2
 
-Projeto fictício do checkpoint Especialista em IA Nível 2. O objetivo é demonstrar como uma equipe pode estruturar governança, um sistema RAG auditável e uma arquitetura multiagente para atendimento digital bancário.
+Portfólio técnico do checkpoint Especialista em IA Nível 2: governança de IA, arquitetura e pipeline RAG auditável, avaliação comparativa e solução multiagente com A2A, MCP e Human-in-the-Loop.
 
-> **Aviso:** este repositório não usa dados reais de clientes, não representa o Bytebank real e não constitui recomendação financeira ou jurídica.
+> O Bytebank e todas as políticas deste repositório são fictícios. Não há dados reais de clientes nem integração financeira habilitada por padrão.
 
-## Sobre o projeto
+## Entregáveis
 
-A jornada começa com políticas internas fictícias e evolui até um protótipo local de agentes. A documentação conecta decisões de negócio, controles de LGPD, recuperação de conhecimento e intervenção humana.
+| # | Entregável | Evidência principal | Status |
+|---|---|---|---|
+| 1 | Governança e composição do time | [Documento](docs/01-governanca.md), [CSV do time](data/composicao_time.csv), [carreira em Y](data/carreira_y.csv) e [planilha Google](https://docs.google.com/spreadsheets/d/1jJYN5SKQHZzNuuFBLDupMnQATMTfR3QBgl82MX-CJiE/edit?usp=sharing) | Concluído |
+| 2 | Arquitetura RAG e glossário | [ADR RAG](docs/02-arquitetura-rag.md), [diagrama editável](diagrams/rag.mmd), [SVG exportado](diagrams/rag.svg) e [glossário](data/glossario_rag.csv) | Concluído |
+| 3 | Pipeline RAG funcional | [Código](src/rag_pipeline.py), [50 políticas](data/politicas_bytebank.csv), [avaliação](outputs/avaliacao_rag.csv) e [testes](tests/test_rag_pipeline.py) | Concluído |
+| 4 | Arquitetura multiagente e portfólio | [Documento](docs/04-arquitetura-multiagente.md), [SVG](diagrams/multiagente.svg), [grafo](src/multiagent_graph.py) e [servidor MCP](scripts/bytebank_mcp_server.py) | Concluído |
 
-## Etapas
+## Arquitetura RAG
 
-1. Governança, ética, papéis do time e carreira em Y.
-2. Arquitetura RAG, glossário e decisões técnicas.
-3. Pipeline de ingestão, metadados, recuperação, reranking e avaliação.
-4. Supervisor multiagente, A2A, MCP, HITL, snapshots e interface Gradio.
+![Fluxo RAG completo do Bytebank](diagrams/rag.svg)
 
-## Estrutura
+O pipeline ingere 50 políticas com metadados, divide em chunks 500/100, gera embeddings locais com `all-MiniLM-L6-v2` e persiste no ChromaDB. A autorização filtra `nivel_acesso` antes da busca. A recuperação combina similaridade vetorial e ranking lexical; oito candidatos seguem para reranking e quatro para a resposta fundamentada.
 
-- [`docs/`](docs/): governança, ADRs e arquitetura.
-- [`data/`](data/): dataset e planilhas reproduzíveis em CSV.
-- [`src/`](src/): pipeline RAG e protótipo multiagente.
-- [`diagrams/`](diagrams/): diagramas Mermaid versionáveis.
-- [`tests/`](tests/): verificações automatizadas locais.
-- [`scripts/`](scripts/): MCP local, conformidade e geração de relatórios.
-- [`docs/relatorio_implementacao_bytebank.md`](docs/relatorio_implementacao_bytebank.md): evidências, análises, revisões e aceite.
-- [`PLANO_EXECUCAO.md`](PLANO_EXECUCAO.md): plano e critérios de validação.
+## Arquitetura multiagente
+
+![Arquitetura multiagente com A2A, MCP e HITL](diagrams/multiagente.svg)
+
+O supervisor usa classificação estruturada Gemini e fallback local rastreável. A2A representa o contrato entre supervisor e agentes; MCP padroniza recursos, ferramentas e prompts. Solicitações Platinum e qualquer ferramenta de mutação exigem aprovação humana explícita.
+
+## Resultado da avaliação
+
+Rodada de 8 casos em 22/08/2026, com Chroma e `gemini-3.5-flash-lite`:
+
+- sem RAG: **1/8 (12,5%)**;
+- com RAG: **8/8 (100%)**;
+- recuperação Chroma + híbrida: **8/8 casos**;
+- três casos concluíram todas as etapas Gemini; nos demais, a cota HTTP 429 ativou fallback local registrado.
+
+O [CSV de avaliação](outputs/avaliacao_rag.csv) informa, por caso, fontes, modo de recuperação, reranking, geração, juiz e fallbacks. Assim, um resultado parcial nunca é apresentado como se fosse uma execução integral do Gemini.
+
+## Tecnologias
+
+Python 3.11+, LangChain Text Splitters, Sentence Transformers, ChromaDB, LangGraph, Google Gen AI SDK, Pydantic, FastMCP, Gradio e unittest. Diagramas em Mermaid e SVG; documentação em Markdown e DOCX.
 
 ## Execução local
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python -m src.rag_pipeline --question "Quais são as regras para abrir uma conta?"
-python -m src.multiagent_graph
+python scripts/setup_runtime.py
+
+# Pipeline vetorial local
+python -m src.rag_pipeline --mode local --retrieval chroma
+
+# Avaliação offline ou Gemini
+python -m src.evaluation --mode local --retrieval chroma
+python -m src.evaluation --mode gemini --retrieval chroma
+
+# Grafo e conformidade
+python -m src.multiagent_graph --mode auto
+python -m unittest discover -s tests -v
 python scripts/validate_project.py
-python scripts/generate_reports.py
 ```
 
-O modo padrão é local e determinístico. APIs de LLM, embeddings externos, Google Sheets, GitHub Pages e publicação ficam desabilitados até que sejam configurados conscientemente.
+Para Gemini, copie `.env.example` para `.env`, grave a chave apenas em `GOOGLE_API_KEY` e mantenha `.env` fora do Git. O modelo de embeddings funciona offline depois da preparação inicial.
+
+## MCP
+
+O servidor stdio inicia com:
+
+```powershell
+.\scripts\start_bytebank_mcp.ps1
+```
+
+Sem `BYTEBANK_CORE_API_BASE_URL` e `BYTEBANK_CORE_API_TOKEN`, leituras externas retornam `not_configured`. `criar_conta` e `solicitar_cartao` retornam `human_approval_required` enquanto `aprovado_por_humano` não for verdadeiro. Consulte [integrações MCP](docs/06-integracoes-mcp.md).
+
+## Estrutura
+
+- [`data/`](data/): políticas, time, carreira, glossário e Agent Cards.
+- [`diagrams/`](diagrams/): fontes Mermaid e exportações SVG.
+- [`docs/`](docs/): governança, arquitetura, avaliações, análises, revisões e relatórios.
+- [`src/`](src/): pipeline RAG, avaliação, integração Gemini, grafo e interface.
+- [`scripts/`](scripts/): setup, MCP, validação e geração dos DOCX.
+- [`tests/`](tests/): contratos de RAG, segurança, multiagente e MCP.
 
 ## Portfólio
 
 ### Motivação
-Atendimento bancário precisa responder com precisão, explicar suas fontes e respeitar limites de acesso.
 
-### Problema resolvido
-O projeto organiza políticas dispersas em uma experiência consultável e encaminha intenções para agentes especializados, sem confundir leitura de dados com mutação.
+Atendimento bancário precisa ser preciso, rastreável e seguro. O objetivo foi transformar políticas dispersas em respostas citadas e encaminhar cada intenção ao agente certo, sem misturar consulta com ação financeira.
 
-### Desafios técnicos
-Chunking com preservação de metadados, avaliação sem mascarar resultados ausentes, roteamento determinístico e pausa humana antes de decisões sensíveis.
+### Principais decisões
+
+- RAG em vez de fine-tuning para fatos mutáveis e remoção controlada de fontes.
+- Chroma persistente com IDs estáveis e embeddings locais para reprodutibilidade.
+- Filtro de acesso antes do retriever para impedir vazamento de contexto interno.
+- Fusão vetorial + lexical para compensar limitações do modelo compacto em português.
+- Fallbacks explícitos para não mascarar indisponibilidade ou cota do Gemini.
+- HITL obrigatório antes de mutações sensíveis no MCP.
 
 ### Aprendizados
-RAG facilita atualização e rastreabilidade; agentes precisam de contratos claros; e governança não é um anexo, mas parte da arquitetura.
 
-## Limitações e pendências
+A arquitetura só é confiável quando avaliação, controle de acesso e trilha de execução fazem parte do fluxo. Protocolos ajudam a separar responsabilidades: A2A organiza colaboração entre agentes; MCP define como agentes acessam capacidades; HITL mantém responsabilidade humana em decisões sensíveis.
 
-- O dataset é fictício e não valida regras de um banco real.
-- Resultados de LLM e juiz automático permanecem pendentes quando não há credencial.
-- Não há screenshots de Power BI no workspace.
-- Usuário GitHub, publicação, Google Sheets e GitHub Pages dependem de dados e autorização do usuário.
+## Publicação e relatórios
 
-## Evidências e revisão
+- [GitHub Pages](https://fredjml.github.io/aluraCarreiraEspecialistaIANivel2B/)
+- [Planilha Google — Governança e RAG](https://docs.google.com/spreadsheets/d/1jJYN5SKQHZzNuuFBLDupMnQATMTfR3QBgl82MX-CJiE/edit?usp=sharing)
+- [Relatório de levantamento](docs/relatorio_levantamento_bytebank.md)
+- [Relatório de implementação](docs/relatorio_implementacao_bytebank.md)
 
-As análises estão em [`docs/analises/`](docs/analises/) e as revisões em [`docs/revisoes/`](docs/revisoes/). O relatório `.docx` correspondente é gerado localmente pelo script de relatórios.
+Limites: o dataset é fictício; o core bancário não foi fornecido; a rodada Gemini encontrou cota 429 e registrou os fallbacks; nenhum merge é feito automaticamente.
