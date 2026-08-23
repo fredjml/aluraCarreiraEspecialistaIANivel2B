@@ -71,3 +71,7 @@ python -m src.multiagent_graph --mode auto
 ## Publicação
 
 A branch de correção é enviada para revisão por Pull Request e não é mesclada automaticamente. O GitHub Pages público foi validado por HTTP; o endereço e a planilha estão disponíveis no README.
+
+**Pull Request:** https://github.com/fredjml/aluraCarreiraEspecialistaIANivel2B/pull/1
+
+**Repositório:** https://github.com/fredjml/aluraCarreiraEspecialistaIANivel2B
