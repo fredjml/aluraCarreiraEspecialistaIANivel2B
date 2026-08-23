@@ -15,7 +15,7 @@ REQUIRED = [
     ".github/instructions/bytebank.instructions.md",
     ".github/skills/validar-entregaveis-bytebank/SKILL.md",
     "data/politicas_bytebank.csv", "data/composicao_time.csv", "data/carreira_y.csv",
-    "data/glossario_rag.csv", "data/agent_cards.csv",
+    "data/glossario_rag.csv", "data/agent_cards.csv", "data/avaliacao_rag.csv",
     "Docs/01-governanca.md", "Docs/02-arquitetura-rag.md",
     "Docs/04-arquitetura-multiagente.md", "Docs/05-avaliacao-rag.md",
     "Docs/relatorio_levantamento_bytebank.md", "Docs/relatorio_levantamento_bytebank.docx",
@@ -26,7 +26,7 @@ REQUIRED = [
     "Docs/analises/03-riscos-residuais.md", "Docs/revisoes/01-revisao-funcional.md",
     "Docs/revisoes/02-revisao-seguranca.md", "Docs/revisoes/03-revisao-entrega.md",
     "diagrams/rag.mmd", "diagrams/rag.svg", "diagrams/multiagente.mmd", "diagrams/multiagente.svg",
-    "src/rag_pipeline.py", "src/gemini_integration.py", "src/evaluation.py",
+    "src/rag_pipeline.py", "src/gemini_integration.py", "src/evaluation.py", "src/identity.py",
     "src/multiagent_graph.py", "src/app.py",
     "tests/test_mcp_tools.py",
 ]
@@ -58,6 +58,10 @@ def check_csvs() -> list[str]:
         errors.append("cabeçalho do dataset não corresponde ao contrato")
     if len(list(csv.DictReader((ROOT / "data/glossario_rag.csv").open(encoding="utf-8")))) < 15:
         errors.append("glossário tem menos de 15 termos")
+    with (ROOT / "data/avaliacao_rag.csv").open(encoding="utf-8", newline="") as handle:
+        evaluation_rows = list(csv.DictReader(handle))
+    if not 30 <= len(evaluation_rows) <= 50:
+        errors.append("dataset de avaliação deve conter entre 30 e 50 casos")
     return errors
 
 

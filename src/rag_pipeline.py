@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from .gemini_integration import GeminiIntegration, resolve_mode
+from .identity import ANONYMOUS, Identity
 
 try:
     from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -208,7 +209,9 @@ def hybrid_candidates(
 
 
 def rerank(query: str, chunks: list[Document], candidates: int = 8, selected: int = 4) -> list[Document]:
-    return retrieve(query, chunks, k=candidates)[:selected]
+    """Reordena apenas os candidatos já recuperados e autorizados."""
+    ranked = sorted(chunks[:candidates], key=lambda item: score(query, item), reverse=True)
+    return ranked[:selected]
 
 
 def answer(query: str, documents: list[Document]) -> str:
@@ -226,6 +229,7 @@ def query(
     gemini: Any | None = None,
     retrieval_backend: str = "auto",
     allowed_levels: set[str] | None = None,
+    identity: Identity | None = None,
     vector_store: Any | None = None,
     persist_directory: str = "outputs/chroma_db",
 ) -> dict[str, object]:
@@ -237,7 +241,11 @@ def query(
     """
     if retrieval_backend not in {"auto", "chroma", "lexical"}:
         raise ValueError("retrieval_backend deve ser auto, chroma ou lexical")
-    access = allowed_levels or {"publico"}
+    authenticated_identity = identity or ANONYMOUS
+    requested_levels = allowed_levels or set(authenticated_identity.allowed_levels)
+    access = set(requested_levels) & set(authenticated_identity.allowed_levels)
+    if not access:
+        raise PermissionError("a identidade não possui acesso aos níveis solicitados")
     chunks = split_documents(load_documents(csv_path))
     fallbacks: list[str] = []
     retrieval_mode = "lexical_deterministic"

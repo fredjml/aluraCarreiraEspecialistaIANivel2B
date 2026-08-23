@@ -18,10 +18,10 @@ O Bytebank precisava evoluir um atendimento baseado em LLM para um ecossistema c
 
 | # | Entregável | Evidência principal | Status |
 |---|---|---|---|
-| 1 | Governança e composição do time | [Documento](Docs/01-governanca.md), [CSV do time](data/composicao_time.csv), [carreira em Y](data/carreira_y.csv) e [planilha Google](https://docs.google.com/spreadsheets/d/1jJYN5SKQHZzNuuFBLDupMnQATMTfR3QBgl82MX-CJiE/edit?usp=sharing) | Concluído |
-| 2 | Arquitetura RAG e glossário | [ADR RAG](Docs/02-arquitetura-rag.md), [diagrama editável](diagrams/rag.mmd), [SVG exportado](diagrams/rag.svg) e [glossário](data/glossario_rag.csv) | Concluído |
-| 3 | Pipeline RAG funcional | [Código](src/rag_pipeline.py), [50 políticas](data/politicas_bytebank.csv), [avaliação](outputs/avaliacao_rag.csv) e [testes](tests/test_rag_pipeline.py) | Concluído |
-| 4 | Arquitetura multiagente e portfólio | [Documento](Docs/04-arquitetura-multiagente.md), [SVG](diagrams/multiagente.svg), [grafo](src/multiagent_graph.py) e [servidor MCP](scripts/bytebank_mcp_server.py) | Concluído |
+| 1 | Governança e composição do time | [Documento](Docs/01-governanca.md), [CSV do time](data/composicao_time.csv), [carreira em Y](data/carreira_y.csv) e [planilha Google](https://docs.google.com/spreadsheets/d/1jJYN5SKQHZzNuuFBLDupMnQATMTfR3QBgl82MX-CJiE/edit?usp=sharing) | Acadêmico atendido |
+| 2 | Arquitetura RAG e glossário | [ADR RAG](Docs/02-arquitetura-rag.md), [diagrama editável](diagrams/rag.mmd), [SVG exportado](diagrams/rag.svg) e [glossário](data/glossario_rag.csv) | Acadêmico atendido |
+| 3 | Pipeline RAG funcional | [Código](src/rag_pipeline.py), [50 políticas](data/politicas_bytebank.csv), [avaliação](outputs/avaliacao_rag.csv) e [testes](tests/test_rag_pipeline.py) | Protótipo executável |
+| 4 | Arquitetura multiagente e portfólio | [Documento](Docs/04-arquitetura-multiagente.md), [SVG](diagrams/multiagente.svg), [grafo](src/multiagent_graph.py) e [servidor MCP](scripts/bytebank_mcp_server.py) | Protótipo executável |
 
 ## Arquitetura RAG
 
@@ -37,16 +37,21 @@ O supervisor usa classificação estruturada Gemini e fallback local rastreável
 
 ## Resultado da avaliação
 
-Rodada de 8 casos em 22/08/2026, com Chroma e `gemini-3.5-flash-lite`:
+Rodada externa de 32 casos em 23/08/2026, com Chroma e `gemini-3.5-flash-lite`:
 
-- sem RAG: **1/8 (12,5%)**;
-- com RAG: **8/8 (100%)**;
-- recuperação Chroma + híbrida: **8/8 casos**;
-- três casos concluíram todas as etapas Gemini; nos demais, a cota HTTP 429 ativou fallback local registrado.
+- sem RAG: **12/32 (37,5%)**;
+- com RAG: **28/32 (87,5%)**;
+- geração Gemini: **32/32 casos**;
+- quatro julgamentos acionaram fallback local registrado.
 
 O [CSV de avaliação](outputs/avaliacao_rag.csv) informa, por caso, fontes, modo de recuperação, reranking, geração, juiz e fallbacks. Assim, um resultado parcial nunca é apresentado como se fosse uma execução integral do Gemini.
 
-Validação final da entrega: **14/14 testes aprovados** e `CONFORMIDADE=OK`.
+A suíte ativa possui 32 casos versionados em `data/avaliacao_rag.csv`, incluindo
+paráfrases, negativas, prompt injection e acesso proibido. A execução usa cache
+e checkpoint para não repetir chamadas concluídas após uma interrupção.
+
+Validação final da entrega: **23/23 testes aprovados**, incluindo E2E de Gradio
+e MCP, e `CONFORMIDADE=OK`.
 
 ## Tecnologias
 
@@ -76,6 +81,11 @@ npm test
 ```
 
 Para Gemini, copie `.env.example` para `.env`, grave a chave apenas em `GOOGLE_API_KEY` e mantenha `.env` fora do Git. O modelo de embeddings funciona offline depois da preparação inicial.
+
+Os clientes de geração e julgamento podem usar modelos distintos com
+`BYTEBANK_GENERATOR_MODEL` e `BYTEBANK_JUDGE_MODEL`. A integração registra
+retries, latência e modelo no CSV; configure também os limites de vazão antes
+de executar uma rodada externa.
 
 ## MCP
 
@@ -126,6 +136,14 @@ A arquitetura só é confiável quando avaliação, controle de acesso e trilha 
 - [Publicação do GitHub Pages concluída](https://github.com/fredjml/aluraCarreiraEspecialistaIANivel2B/actions/runs/32612667137)
 
 Situação da entrega: os quatro entregáveis foram integrados à `main` pelo PR #1, e o portfólio foi publicado no GitHub Pages. Limites conhecidos: o dataset é fictício; o core bancário não foi fornecido; a rodada Gemini encontrou cota 429 e registrou os fallbacks.
+
+## Maturidade
+
+- **Critério acadêmico:** atendido pelos quatro entregáveis exigidos.
+- **Protótipo executável:** testes unitários, E2E opt-in e CI para interface e MCP.
+- **Pronto para produção:** pendente de provedor OIDC/JWKS homologado, core bancário fictício homologado e rodada externa integral sem fallback.
+
+Consulte o [plano de evolução](Docs/07-maturidade-producao.md) para controles, evidências e limitações.
 
 ## Contato
 

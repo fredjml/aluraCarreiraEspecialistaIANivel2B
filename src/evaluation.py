@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
+import json
 import re
 import unicodedata
 from pathlib import Path
@@ -12,16 +14,29 @@ from .gemini_integration import GeminiIntegration, JudgeDecision, resolve_mode
 from .rag_pipeline import query
 
 
-VALIDATION = [
-    ("Quais documentos são necessários para abrir conta?", "CPF válido, comprovante de residência e documento de identidade"),
-    ("Quanto custa a TED adicional?", "R$9,90"),
-    ("Qual é a anuidade do cartão Platinum?", "R$59,90"),
-    ("Qual o limite máximo do cartão Gold?", "R$20.000"),
-    ("Como contestar uma transação não reconhecida?", "em até 48 horas pelo aplicativo"),
-    ("Qual o prazo para excluir dados pessoais?", "15 dias úteis"),
-    ("Qual o prazo de resposta da ouvidoria?", "10 dias úteis"),
-    ("Qual o limite do Pix noturno?", "R$1.000 por transação"),
-]
+DEFAULT_VALIDATION_PATH = Path("data/avaliacao_rag.csv")
+
+
+def load_validation_cases(path: Path = DEFAULT_VALIDATION_PATH) -> list[dict[str, str]]:
+    with path.open(encoding="utf-8", newline="") as handle:
+        cases = list(csv.DictReader(handle))
+    required = {"id", "tipo", "pergunta", "gabarito", "exige_fonte", "nivel_acesso"}
+    if not cases or not required.issubset(cases[0]):
+        raise ValueError("dataset de avaliação não atende ao contrato")
+    return cases
+
+
+def _load_state(path: Path | None) -> dict[str, dict[str, str]]:
+    if path is None or not path.exists():
+        return {}
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _save_state(path: Path | None, state: dict[str, dict[str, str]]) -> None:
+    if path is None:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def _normalize(text: str) -> str:
@@ -75,21 +90,66 @@ def _judge(
     return local_judge(expected, answer, require_source), None
 
 
+def _client_metadata(client: Any | None) -> tuple[str, str, str]:
+    if client is None:
+        return "local_deterministic", "-", "requests=0; retries=0; latency_ms=0"
+    snapshot = getattr(client, "metrics_snapshot", lambda: {})()
+    provider = str(snapshot.get("provider", "gemini"))
+    model = str(snapshot.get("model", "configured"))
+    metrics = (
+        f"requests={snapshot.get('requests', 'n/a')}; "
+        f"retries={snapshot.get('retries', 'n/a')}; "
+        f"latency_ms={snapshot.get('latency_ms', 'n/a')}"
+    )
+    return provider, model, metrics
+
+
 def evaluate(
     csv_path: Path,
     llm_mode: str | None = None,
     gemini: Any | None = None,
+    judge: Any | None = None,
     retrieval_backend: str = "auto",
+    validation_path: Path = DEFAULT_VALIDATION_PATH,
+    cache_path: Path | None = None,
+    checkpoint_path: Path | None = None,
 ) -> list[dict[str, str]]:
     requested_mode = resolve_mode(llm_mode)
     initialization_reason: str | None = None
     client = gemini if requested_mode == "gemini" else None
+    judge_client = judge if requested_mode == "gemini" else None
+    judge_initialization_reason: str | None = None
     if requested_mode == "gemini" and client is None:
-        client, initialization_reason = GeminiIntegration.create_from_env("gemini")
+        client, initialization_reason = GeminiIntegration.create_from_env(
+            "gemini", model_variable="BYTEBANK_GENERATOR_MODEL"
+        )
+    if requested_mode == "gemini" and judge_client is None:
+        judge_client, judge_initialization_reason = GeminiIntegration.create_from_env(
+            "gemini", model_variable="BYTEBANK_JUDGE_MODEL"
+        )
+    if judge is None and gemini is not None:
+        # Mantém compatibilidade com injeções de teste; produção cria clientes separados.
+        judge_client = gemini
 
+    cases = load_validation_cases(validation_path)
+    cache = _load_state(cache_path)
+    checkpoint = _load_state(checkpoint_path)
     rows = []
-    for question, expected in VALIDATION:
-        fallbacks = [initialization_reason] if initialization_reason else []
+    for case in cases:
+        question = case["pergunta"]
+        expected = case["gabarito"]
+        require_source = case["exige_fonte"].strip().lower() == "sim"
+        cache_key = hashlib.sha256(
+            json.dumps(
+                {"case": case, "mode": requested_mode, "retrieval": retrieval_backend},
+                sort_keys=True,
+            ).encode("utf-8")
+        ).hexdigest()
+        cached = checkpoint.get(cache_key) or cache.get(cache_key)
+        if cached is not None:
+            rows.append(cached)
+            continue
+        fallbacks = [item for item in (initialization_reason, judge_initialization_reason) if item]
         without_rag = local_baseline()
         baseline_mode = "local_deterministic"
         if client is not None:
@@ -111,10 +171,10 @@ def evaluate(
         fallbacks.extend(str(item) for item in result["fallbacks"])
 
         judge_without, judge_without_error = _judge(
-            client, question, expected, without_rag, require_source=False
+            judge_client, question, expected, without_rag, require_source=False
         )
         judge_with, judge_with_error = _judge(
-            client, question, expected, with_rag, require_source=True
+            judge_client, question, expected, with_rag, require_source=require_source
         )
         if judge_without_error:
             fallbacks.append(judge_without_error)
@@ -125,7 +185,12 @@ def evaluate(
             f"id={document.metadata['id']}" for document in result["source_documents"]
         )
         judge_modes = sorted({judge_without.mode, judge_with.mode})
-        rows.append({
+        generator_provider, generator_model, generator_metrics = _client_metadata(client)
+        judge_provider, judge_model, judge_metrics = _client_metadata(judge_client)
+        row = {
+            "id_caso": case["id"],
+            "tipo_caso": case["tipo"],
+            "nivel_acesso": case["nivel_acesso"],
             "pergunta": question,
             "gabarito": expected,
             "resposta_sem_rag": without_rag,
@@ -136,6 +201,12 @@ def evaluate(
             "modo_recuperacao": str(result["retrieval_mode"]),
             "modo_com_rag": str(result["generation_mode"]),
             "modo_juiz": "+".join(judge_modes),
+            "provedor_gerador": generator_provider,
+            "modelo_gerador": generator_model,
+            "metricas_gerador": generator_metrics,
+            "provedor_juiz": judge_provider,
+            "modelo_juiz": judge_model,
+            "metricas_juiz": judge_metrics,
             "acerto_sem_rag": "sim" if judge_without.correct else "não",
             "nota_sem_rag": str(judge_without.score),
             "justificativa_sem_rag": judge_without.rationale,
@@ -143,7 +214,12 @@ def evaluate(
             "nota_com_rag": str(judge_with.score),
             "justificativa_com_rag": judge_with.rationale,
             "fallbacks": " | ".join(dict.fromkeys(item for item in fallbacks if item)),
-        })
+        }
+        rows.append(row)
+        cache[cache_key] = row
+        checkpoint[cache_key] = row
+        _save_state(cache_path, cache)
+        _save_state(checkpoint_path, checkpoint)
     return rows
 
 
@@ -165,9 +241,17 @@ def write_report(
     output_path: Path,
     llm_mode: str | None = None,
     retrieval_backend: str = "auto",
+    validation_path: Path = DEFAULT_VALIDATION_PATH,
+    cache_path: Path | None = Path("outputs/avaliacao_cache.json"),
+    checkpoint_path: Path | None = Path("outputs/avaliacao_checkpoint.json"),
 ) -> dict[str, float | int]:
     rows = evaluate(
-        csv_path, llm_mode=llm_mode, retrieval_backend=retrieval_backend
+        csv_path,
+        llm_mode=llm_mode,
+        retrieval_backend=retrieval_backend,
+        validation_path=validation_path,
+        cache_path=cache_path,
+        checkpoint_path=checkpoint_path,
     )
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8", newline="") as handle:
@@ -181,6 +265,9 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--csv", type=Path, default=Path("data/politicas_bytebank.csv"))
     parser.add_argument("--output", type=Path, default=Path("outputs/avaliacao_rag.csv"))
+    parser.add_argument("--cases", type=Path, default=DEFAULT_VALIDATION_PATH)
+    parser.add_argument("--cache", type=Path, default=Path("outputs/avaliacao_cache.json"))
+    parser.add_argument("--checkpoint", type=Path, default=Path("outputs/avaliacao_checkpoint.json"))
     parser.add_argument(
         "--mode",
         choices=("auto", "local", "gemini"),
@@ -195,7 +282,13 @@ def main() -> None:
     args = parser.parse_args()
 
     summary = write_report(
-        args.csv, args.output, llm_mode=args.mode, retrieval_backend=args.retrieval
+        args.csv,
+        args.output,
+        llm_mode=args.mode,
+        retrieval_backend=args.retrieval,
+        validation_path=args.cases,
+        cache_path=args.cache,
+        checkpoint_path=args.checkpoint,
     )
     print(f"Relatório criado em {args.output}")
     print(

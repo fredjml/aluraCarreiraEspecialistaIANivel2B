@@ -13,6 +13,7 @@ from urllib.request import Request, urlopen
 
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
+from src.identity import IdentityError, authenticate_bearer
 
 ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env")
@@ -75,17 +76,26 @@ def fatura_resource(cliente_referencia: str) -> str:
 
 
 @mcp.tool()
-def consultar_politicas(pergunta: str, nivel_acesso: str = "publico") -> dict:
-    """Consulta políticas fictícias locais por termos, respeitando nível de acesso."""
+def consultar_politicas(pergunta: str, access_token: str | None = None) -> dict:
+    """Consulta políticas conforme permissões derivadas do JWT, nunca do cliente."""
+    try:
+        identity = authenticate_bearer(access_token)
+    except IdentityError as error:
+        return {"status": "unauthorized", "message": str(error)}
     terms = {term for term in pergunta.lower().split() if len(term) > 2}
     matches = []
     for row in _policies():
-        if row["nivel_acesso"] != nivel_acesso:
+        if row["nivel_acesso"] not in identity.allowed_levels:
             continue
         text = row["conteudo"].lower()
         if terms & set(text.split()):
             matches.append(row)
-    return {"status": "ok", "count": len(matches[:4]), "source_documents": matches[:4]}
+    return {
+        "status": "ok",
+        "count": len(matches[:4]),
+        "source_documents": matches[:4],
+        "access_levels": sorted(identity.allowed_levels),
+    }
 
 
 @mcp.tool()
@@ -105,8 +115,15 @@ def criar_conta(
     cliente_referencia: str,
     tipo: str = "corrente",
     aprovado_por_humano: bool = False,
+    access_token: str | None = None,
 ) -> dict:
     """Cria conta somente após HITL; nunca executa mutação sem aprovação."""
+    try:
+        identity = authenticate_bearer(access_token)
+    except IdentityError as error:
+        return {"status": "unauthorized", "message": str(error)}
+    if not identity.can_approve:
+        return {"status": "approval_identity_required", "message": "Token de aprovador obrigatório."}
     if not aprovado_por_humano:
         return {
             "status": "human_approval_required",
@@ -120,8 +137,19 @@ def criar_conta(
 
 
 @mcp.tool()
-def solicitar_cartao(cliente_referencia: str, modalidade: str, aprovado_por_humano: bool = False) -> dict:
+def solicitar_cartao(
+    cliente_referencia: str,
+    modalidade: str,
+    aprovado_por_humano: bool = False,
+    access_token: str | None = None,
+) -> dict:
     """Solicita cartão somente após aprovação humana explícita e configuração do core externo."""
+    try:
+        identity = authenticate_bearer(access_token)
+    except IdentityError as error:
+        return {"status": "unauthorized", "message": str(error)}
+    if not identity.can_approve:
+        return {"status": "approval_identity_required", "message": "Token de aprovador obrigatório."}
     if not aprovado_por_humano:
         return {"status": "human_approval_required", "message": "Aprovação humana obrigatória antes de solicitar cartão."}
     return _external_request("POST", "cartoes/solicitacoes", {"cliente_referencia": cliente_referencia, "modalidade": modalidade})

@@ -1,4 +1,4 @@
-"""Gera DOCX profissionais a partir dos dois relatórios Markdown versionados."""
+"""Gera DOCX profissionais a partir dos relatórios Markdown versionados."""
 from __future__ import annotations
 
 import re
@@ -18,6 +18,7 @@ DOCS = ROOT / "Docs"
 REPORTS = (
     ("relatorio_levantamento_bytebank.md", "Levantamento", "Requisitos, lacunas, decisões e controles"),
     ("relatorio_implementacao_bytebank.md", "Implementação", "Evidências técnicas e prontidão para avaliação"),
+    ("relatorio_executivo_implementacao_bytebank.md", "Executivo", "Visão de resultado, risco e maturidade técnica"),
 )
 NAVY = "0F3557"
 BLUE = RGBColor(15, 90, 138)

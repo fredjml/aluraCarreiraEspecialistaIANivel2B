@@ -1,6 +1,6 @@
 # Relatório de implementação · Bytebank Nível 2
 
-**Data:** 22/08/2026
+**Data:** 23/08/2026
 
 **Repositório:** https://github.com/fredjml/aluraCarreiraEspecialistaIANivel2B
 
@@ -22,7 +22,11 @@ As 50 políticas CSV são carregadas como documentos com `id`, `dominio`, `secao
 
 ### 3. Gemini e avaliação
 
-A integração usa a SDK `google-genai`, saídas estruturadas Pydantic e `gemini-3.5-flash-lite`. A rodada de oito casos obteve 1/8 sem RAG e 8/8 com RAG. A recuperação Chroma+híbrida operou nos oito casos. A cota HTTP 429 fez cinco casos usarem ao menos um fallback local; cada ocorrência está registrada, portanto a evidência não é apresentada como rodada integralmente Gemini.
+A integração usa a SDK `google-genai`, saídas estruturadas Pydantic, retry com
+backoff e limite de 12 RPM. A rodada externa de 32 casos obteve 12/32 sem RAG e
+28/32 com RAG. A geração foi Gemini nos 32 casos, mas quatro julgamentos
+acionaram fallback local; por isso a evidência não é apresentada como avaliação
+integralmente externa.
 
 ### 4. Multiagente, A2A, MCP e HITL
 
@@ -47,7 +51,7 @@ O LangGraph contém supervisor, agentes `conta_corrente`, `cartao_credito` e `su
 | 3.3 | Embeddings locais, Chroma persistente e retriever por similaridade com `k=4` | `src/rag_pipeline.py` e testes vetoriais | FEITO |
 | 3.4 | Recuperação de oito candidatos, reranking e seleção dos quatro melhores | `src/rag_pipeline.py` e validador de conformidade | FEITO |
 | 3.5 | Comparação da mesma pergunta sem RAG e com RAG | `src/evaluation.py` e `outputs/avaliacao_rag.csv` | FEITO |
-| 3.6 | Dataset de validação com oito perguntas e gabaritos | `src/evaluation.py` | FEITO |
+| 3.6 | Dataset de validação com 32 perguntas e gabaritos | `data/avaliacao_rag.csv` | FEITO |
 | 3.7 | Avaliação estruturada, percentual de acertos e tabela Markdown por caso | `Docs/05-avaliacao-rag.md` e CSV de avaliação | FEITO |
 | 3.8 | Rastreabilidade de modos, fontes e fallbacks sem mascarar falhas externas | `outputs/avaliacao_rag.csv` e `Docs/05-avaliacao-rag.md` | FEITO |
 | 4.1 | Diagrama com front-end, BFA, três agentes, Agent Cards, A2A, MCP, HITL e snapshots | `diagrams/multiagente.mmd` e SVG | FEITO |
@@ -59,13 +63,13 @@ O LangGraph contém supervisor, agentes `conta_corrente`, `cartao_credito` e `su
 | 4.7 | Interface Gradio exibindo resposta e classificação | `src/app.py` | FEITO |
 | 4.8 | MCP separando recursos, ferramentas e prompts, com bloqueio de mutações por HITL | `scripts/bytebank_mcp_server.py` e testes MCP | FEITO |
 | 4.9 | README final com arquitetura, tecnologias, desafios e aprendizados | `README.md` | FEITO |
-| V.1 | Suíte unitária local | 14 testes executados em 23/08/2026 | FEITO |
+| V.1 | Suíte unitária e E2E | 23 testes executados em 23/08/2026 | FEITO |
 | V.2 | Validador estrutural, de dados, sintaxe e contratos | `python scripts/validate_project.py`: `CONFORMIDADE=OK` | FEITO |
 | V.3 | Integridade do histórico Git local | `git log` e `git fsck --full` após recuperação do objeto `8f2a23a…` | FEITO |
 
 Todos os critérios marcados como `FEITO` possuem evidência local ou externa
-indicada na mesma linha. A rodada Gemini permanece qualificada: três casos
-concluíram geração e julgamento externos; cinco acionaram fallback por HTTP 429.
+indicada na mesma linha. A rodada Gemini permanece qualificada: 32 gerações
+foram externas; quatro julgamentos acionaram fallback local.
 
 ## Segurança
 
@@ -78,14 +82,14 @@ concluíram geração e julgamento externos; cinco acionaram fallback por HTTP 4
 
 ## Limites conhecidos
 
-O banco, clientes e políticas são fictícios. O modelo de embeddings compacto não é específico para português, motivo da fusão lexical. A API do core bancário não foi fornecida e permanece desabilitada. A cota Gemini impediu uma rodada 100% externa, mas a avaliação terminou com fallbacks rastreáveis e 100% de acerto RAG.
+O banco, clientes e políticas são fictícios. O modelo de embeddings compacto não é específico para português, motivo da fusão lexical. A API do core bancário não foi fornecida e permanece desabilitada. Quatro julgamentos Gemini acionaram fallback local e a acurácia RAG observada foi 87,5%; o resultado não representa garantia de produção.
 
 ## Reprodução
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
 python scripts/setup_runtime.py
-python -m unittest discover -s tests -v  # 14 testes aprovados em 23/08/2026
+python -m unittest discover -s tests -v  # 23 testes aprovados em 23/08/2026
 python scripts/validate_project.py
 python -m src.rag_pipeline --mode local --retrieval chroma
 python -m src.evaluation --mode gemini --retrieval chroma

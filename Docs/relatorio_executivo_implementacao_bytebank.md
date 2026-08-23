@@ -12,18 +12,19 @@
 
 O projeto implementa um ecossistema fictício de IA para atendimento digital do Bytebank. A entrega cobre as quatro etapas do checkpoint Especialista em IA Nível 2 e conecta governança, dados, recuperação de conhecimento, geração fundamentada, agentes especializados e aprovação humana. O desenho evita que uma demonstração técnica seja confundida com uma integração bancária real: dados são fictícios, mutações são bloqueadas por padrão e integrações externas exigem configuração explícita.
 
-A solução processa 50 políticas, preserva metadados de domínio e acesso, cria chunks de 500 caracteres com overlap 100, indexa embeddings locais no ChromaDB e combina recuperação vetorial com ranking lexical. O fluxo recupera oito candidatos, aplica reranking e entrega quatro evidências à geração. A avaliação versionada contém oito perguntas e compara o mesmo gabarito com e sem RAG.
+A solução processa 50 políticas, preserva metadados de domínio e acesso, cria chunks de 500 caracteres com overlap 100, indexa embeddings locais no ChromaDB e combina recuperação vetorial com ranking lexical. O fluxo recupera oito candidatos, aplica reranking e entrega quatro evidências à geração. A avaliação versionada contém 32 cenários e compara o mesmo gabarito com e sem RAG.
 
-O resultado observado foi 1/8 sem RAG e 8/8 com RAG. Três casos concluíram geração e julgamento no Gemini; cinco registraram fallback local após HTTP 429. Essa distinção é material: a acurácia do caminho RAG foi 100%, mas a rodada não é apresentada como execução integralmente externa.
+O resultado externo observado foi 12/32 sem RAG e 28/32 com RAG. A geração ocorreu no Gemini nos 32 casos; quatro julgamentos registraram fallback local. Essa distinção é material: a acurácia RAG observada foi 87,5%, e a rodada não é apresentada como avaliação integralmente externa.
 
 | Indicador executivo | Resultado verificado |
 |---|---|
 | Políticas fictícias processadas | 50 |
-| Casos de validação | 8 |
-| Acurácia sem RAG | 1/8 - 12,5% |
-| Acurácia com RAG | 8/8 - 100% |
-| Recuperação com fontes | 8/8 casos |
-| Testes unitários | 14/14 aprovados |
+| Casos de validação | 32 |
+| Acurácia sem RAG | 12/32 - 37,5% |
+| Acurácia com RAG | 28/32 - 87,5% |
+| Geração Gemini | 32/32 casos |
+| Julgamento com fallback | 4/32 casos |
+| Testes unitários e E2E | 23/23 aprovados |
 | Conformidade do projeto | `CONFORMIDADE=OK` |
 | Integridade Git local | `git log` e `git fsck --full` operacionais |
 
@@ -104,7 +105,7 @@ Cada documento recebe ainda `categoria_semantica` e `origem`; cada chunk acresce
 
 ### 4.3 Controle de acesso
 
-`filter_by_access()` restringe os chunks antes do ranking lexical. No Chroma, o mesmo controle é aplicado por filtro `where` sobre `nivel_acesso`. A consulta pública usa somente `publico`; conteúdo interno não entra no contexto padrão. Em produção, `allowed_levels` deve ser derivado de identidade e papéis reais, nunca de um valor fornecido livremente pelo cliente.
+`filter_by_access()` restringe os chunks antes do ranking lexical. No Chroma, o mesmo controle é aplicado por filtro `where` sobre `nivel_acesso`. A consulta pública usa somente `publico`; conteúdo interno não entra no contexto padrão. `allowed_levels` é limitado pelas permissões derivadas da identidade JWT; o MCP valida assinatura, emissor, audiência, expiração e papéis, com suporte configurável a JWKS.
 
 ## 5. Arquitetura e implementação RAG
 
@@ -145,24 +146,20 @@ Quando Gemini está disponível, reranking e geração podem usar saída estrutu
 
 ### 6.1 Método
 
-O conjunto de validação contém oito pares de pergunta e gabarito baseados nas políticas. Para cada caso são produzidas uma resposta sem RAG e uma resposta com RAG. O juiz estruturado avalia presença do fato esperado; no caminho RAG, exige também citação de fonte. O CSV registra pergunta, gabarito, respostas, fontes, modo de recuperação, reranking, geração, juiz, notas, justificativas e fallbacks.
+O conjunto de validação contém 32 casos versionados, incluindo perguntas diretas, paráfrases, múltiplas fontes, negativas, tentativas de prompt injection, acesso proibido e regressões. Para cada caso são produzidas uma resposta sem RAG e uma resposta com RAG. O juiz estruturado avalia presença do fato esperado; no caminho RAG, exige também citação de fonte. Cache e checkpoint permitem retomar execução. O CSV registra pergunta, gabarito, respostas, fontes, modo de recuperação, reranking, geração, juiz, notas, justificativas, métricas e fallbacks.
 
-### 6.2 Resultado por caso
+### 6.2 Resultado agregado
 
-| # | Tema | Sem RAG | Com RAG | Fontes principais | Execução RAG/juiz |
-|---:|---|---:|---:|---|---|
-| 1 | Documentos para abrir conta | 100 | 100 | 1, 2, 50, 28 | Gemini/Gemini |
-| 2 | Custo da TED adicional | 0 | 100 | 3, 30, 25, 36 | Gemini/Gemini |
-| 3 | Anuidade do Platinum | 0 | 100 | 9, 36, 11, 45 | Gemini/Gemini |
-| 4 | Limite máximo Gold | 0 | 100 | 11, 9, 7, 13 | Local/Local - 429 |
-| 5 | Contestação de transação | 0 | 100 | 30, 9, 46, 1 | Local/Local - 429 |
-| 6 | Exclusão de dados pessoais | 0 | 100 | 28, 5, 26, 50 | Local/Local - 429 |
-| 7 | Prazo da ouvidoria | 0 | 100 | 15, 37, 5, 28 | Local/Local - 429 |
-| 8 | Limite do Pix noturno | 0 | 100 | 32, 31, 11, 29 | Local/Local - 429 |
+| Indicador | Resultado |
+|---|---:|
+| Sem RAG | 12/32 - 37,5% |
+| Com RAG | 28/32 - 87,5% |
+| Geração Gemini | 32/32 |
+| Julgamento com fallback local | 4/32 |
 
 ### 6.3 Interpretação
 
-O ganho de 12,5% para 100% demonstra a contribuição do contexto recuperado neste dataset, não uma garantia de desempenho em produção. Cinco casos acionaram fallback por limite HTTP 429; logo, o resultado deve ser descrito como RAG híbrido rastreável. Uma avaliação produtiva deve ampliar amostra, separar modelo gerador e juiz, incluir revisão humana, medir recall de recuperação e testar consultas adversariais e controles de acesso.
+O ganho de 37,5% para 87,5% demonstra a contribuição do contexto recuperado nesta massa ampliada, não uma garantia de desempenho em produção. Quatro julgamentos acionaram fallback local; logo, o resultado deve ser descrito como RAG rastreável com avaliação parcialmente externa. A próxima rodada deve usar modelo ou provedor de juiz distinto e incluir revisão humana amostral.
 
 ## 7. Arquitetura multiagente
 
