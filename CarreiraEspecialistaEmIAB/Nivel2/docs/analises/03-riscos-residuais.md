@@ -1,8 +1,15 @@
 # Análise 3: riscos residuais
 
-1. O fallback lexical não substitui benchmark de embeddings semânticos em produção.
-2. A taxa de acerto de juiz LLM não foi inventada: permanece pendente sem credencial e revisão autorizada.
-3. Agent Cards usam URLs locais demonstrativas e não representam serviços publicados.
-4. O fluxo HITL é protótipo de estado; não executa aprovação financeira real.
+1. O modelo de embeddings é compacto e não especializado em português; a fusão
+   lexical reduz o risco, mas deve ser comparada a embeddings multilíngues.
+2. O mesmo modelo pode gerar e julgar uma resposta, introduzindo viés. Uma
+   evolução deve usar amostragem humana ou modelo juiz independente.
+3. Uma rodada Gemini completa faz até 40 chamadas; cota, custo e latência devem
+   ser monitorados.
+4. A cota Gemini gerou HTTP 429 em parte da rodada; produção requer orçamento,
+   limitação de taxa e modelo juiz independente.
+5. Agent Cards e HITL permanecem protótipos; não representam serviços bancários
+   publicados nem aprovação financeira real.
 
-**Mitigação:** manter modo local para testes, habilitar integrações por configuração, medir recall/groundedness e exigir revisão humana para mutações.
+**Mitigação:** manter testes locais, registrar fallbacks, medir recall e
+groundedness, revisar amostras e exigir decisão humana para mutações.

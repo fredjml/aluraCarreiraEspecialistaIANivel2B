@@ -1,0 +1,11 @@
+{
+  "servers": {
+    "bytebank-nivel2": {
+      "type": "stdio",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+      "args": [
+        "${workspaceFolder}\\scripts\\bytebank_mcp_server.py"
+      ]
+    }
+  }
+}

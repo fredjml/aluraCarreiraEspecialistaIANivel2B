@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760" role="img" aria-labelledby="title desc">
+  <title id="title">Arquitetura RAG do Bytebank</title>
+  <desc id="desc">Fluxo completo de ingestão, Chroma, recuperação híbrida, reranking, geração e auditoria.</desc>
+  <defs>
+    <style>
+      .bg{fill:#f7fafc}.band{fill:#0f3557}.box{fill:#fff;stroke:#0f5a8a;stroke-width:2}.data{fill:#eaf4fb;stroke:#0f5a8a;stroke-width:2}.ai{fill:#fff4df;stroke:#d98200;stroke-width:2}.guard{fill:#e7f6ef;stroke:#16805b;stroke-width:2}.t{font:600 18px Arial;fill:#16324a}.s{font:14px Arial;fill:#35556f}.h{font:700 30px Arial;fill:#fff}.lane{font:700 17px Arial;fill:#0f5a8a}.arrow{stroke:#55788f;stroke-width:2.5;fill:none;marker-end:url(#a)}
+    </style>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#55788f"/></marker>
+  </defs>
+  <rect class="bg" width="1400" height="760" rx="20"/><rect class="band" width="1400" height="92" rx="20"/><rect class="band" y="70" width="1400" height="22"/>
+  <text class="h" x="48" y="56">Bytebank · Pipeline RAG auditável</text>
+  <text class="lane" x="48" y="132">INGESTÃO E ÍNDICE</text><text class="lane" x="48" y="414">CONSULTA E RESPOSTA</text>
+  <rect class="data" x="48" y="160" width="210" height="100" rx="12"/><text class="t" x="68" y="198">50 políticas CSV</text><text class="s" x="68" y="228">conteúdo fictício</text>
+  <rect class="box" x="300" y="160" width="230" height="100" rx="12"/><text class="t" x="320" y="195">Documentos + metadata</text><text class="s" x="320" y="225">id · domínio · seção</text><text class="s" x="320" y="246">nível de acesso</text>
+  <rect class="box" x="572" y="160" width="220" height="100" rx="12"/><text class="t" x="592" y="195">Chunking 500/100</text><text class="s" x="592" y="225">categoria semântica</text>
+  <rect class="ai" x="834" y="160" width="230" height="100" rx="12"/><text class="t" x="854" y="195">Embeddings locais</text><text class="s" x="854" y="225">all-MiniLM-L6-v2</text>
+  <rect class="data" x="1106" y="160" width="246" height="100" rx="12"/><text class="t" x="1126" y="195">Chroma persistente</text><text class="s" x="1126" y="225">cosseno · IDs estáveis</text>
+  <path class="arrow" d="M258 210H300"/><path class="arrow" d="M530 210H572"/><path class="arrow" d="M792 210H834"/><path class="arrow" d="M1064 210H1106"/>
+  <rect class="box" x="48" y="448" width="190" height="96" rx="12"/><text class="t" x="68" y="485">Pergunta</text><text class="s" x="68" y="514">usuário autorizado</text>
+  <rect class="guard" x="280" y="448" width="218" height="96" rx="12"/><text class="t" x="300" y="483">Filtro pré-busca</text><text class="s" x="300" y="513">nivel_acesso=publico</text>
+  <rect class="data" x="540" y="416" width="232" height="82" rx="12"/><text class="t" x="560" y="451">Similarity search</text><text class="s" x="560" y="477">Chroma k=4 / k=8</text>
+  <rect class="box" x="540" y="520" width="232" height="82" rx="12"/><text class="t" x="560" y="555">Fusão híbrida</text><text class="s" x="560" y="581">vetorial + lexical</text>
+  <rect class="ai" x="814" y="448" width="220" height="96" rx="12"/><text class="t" x="834" y="483">Reranking 8 → 4</text><text class="s" x="834" y="513">Gemini ou fallback</text>
+  <rect class="ai" x="1076" y="448" width="276" height="96" rx="12"/><text class="t" x="1096" y="483">Resposta fundamentada</text><text class="s" x="1096" y="513">citações [id=N]</text>
+  <path class="arrow" d="M238 496H280"/><path class="arrow" d="M498 482H540"/><path class="arrow" d="M498 510C520 510 520 560 540 560"/><path class="arrow" d="M772 457C795 457 792 480 814 480"/><path class="arrow" d="M772 560C795 560 792 514 814 514"/><path class="arrow" d="M1034 496H1076"/><path class="arrow" d="M1228 260V420C1228 435 1180 430 1180 448"/>
+  <rect class="guard" x="280" y="648" width="1072" height="66" rx="12"/><text class="t" x="306" y="688">Rastreabilidade: source_documents · modelo · modos efetivos · fallbacks · avaliação 8 casos</text>
+  <path class="arrow" d="M1214 544V648"/>
+</svg>

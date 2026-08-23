@@ -2,14 +2,14 @@
 
 ## Componentes
 
-O front-end Gradio conversa com o BFA, que contém supervisor, roteador e síntese. O supervisor classifica cada mensagem em exatamente `conta_corrente`, `cartao_credito` ou `suporte` e encaminha via A2A ao agente especializado correspondente.
+O front-end Gradio conversa com o BFA, que contém supervisor, roteador e síntese. O supervisor usa classificação estruturada Gemini para escolher exatamente `conta_corrente`, `cartao_credito` ou `suporte`; indisponibilidade de rede/API aciona um classificador local rastreável. Em seguida, encaminha via A2A ao agente especializado correspondente.
 
 Cada Agent Card registra `nome`, `descricao`, `url`, `skills` e `versao`. No protótipo as URLs são placeholders locais e não representam serviços publicados.
 
 ## A2A e MCP
 
 - **A2A:** comunicação entre supervisor e agentes, com contrato de tarefa, estado, resposta e rastreabilidade.
-- **MCP:** acesso padronizado a capacidades do banco. Ferramentas de mutação: `criar_conta` e `solicitar_cartao`. Recursos de leitura: `consultar_saldo` e `consultar_fatura`. Prompts: templates de atendimento e contestação.
+- **MCP:** acesso padronizado a capacidades do banco. O servidor stdio implementado em `scripts/bytebank_mcp_server.py` expõe as ferramentas de mutação `criar_conta` e `solicitar_cartao`, ambas bloqueadas por `aprovado_por_humano`; recursos URI de leitura para saldo, fatura e políticas públicas; e prompt de resposta fundamentada.
 
 | Critério | A2A | MCP |
 |---|---|---|
@@ -34,4 +34,4 @@ Polling atende tarefas simples de conta; SSE/streaming atende suporte quando há
 4. Uma pessoa autorizada decide `aprovar` ou `cancelar`, sem editar a evidência.
 5. `aprovar` retoma o fluxo e chama a ferramenta de mutação; `cancelar` encerra com motivo auditável.
 
-O protótipo local representa a pausa por estado e não executa aprovação financeira real.
+O estado `requer_aprovacao_humana` materializa a pausa no grafo para Platinum, e o servidor MCP recusa a mutação enquanto a aprovação não for explícita. O protótipo não executa aprovação financeira real; sem endpoint/token do core, retorna `not_configured`.

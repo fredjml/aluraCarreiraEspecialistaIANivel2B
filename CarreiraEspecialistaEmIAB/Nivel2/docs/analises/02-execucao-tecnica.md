@@ -1,5 +1,10 @@
 # Análise 2: execução técnica
 
-O modo padrão é local e determinístico. O carregamento cria 50 documentos, o splitter preserva os metadados e a recuperação executa `k=4`. O fluxo de reranking recupera oito candidatos e seleciona quatro. O grafo multiagente executa três intenções e possui fallback quando LangGraph não está instalado.
+O carregamento cria 50 documentos; o splitter preserva metadados; Chroma usa
+embeddings normalizados e filtro de acesso antes da busca. O ranking híbrido
+combina oito candidatos semânticos e lexicais, e o reranker seleciona quatro.
+A suíte cobre acesso público, caminho vetorial, classificação Gemini, fallback
+multiagente e bloqueio HITL no MCP.
 
-**Conclusão:** o caminho sem credenciais é reproduzível e adequado para demonstração; ChromaDB/HuggingFace, LLM e juiz automático são integrações opcionais.
+**Conclusão:** 13 testes unitários passaram. A rodada real obteve 8/8 com RAG;
+cinco casos registraram fallback parcial por cota 429, sem mascarar o evento.

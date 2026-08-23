@@ -7,6 +7,9 @@ langgraph>=0.2
 chromadb>=0.5
 sentence-transformers>=3.0
 gradio>=4.0
+mcp>=1.0,<2.0
+google-genai>=1.0
+python-docx>=1.1
 # Integrações opcionais:
 # langchain-openai>=0.1
 # tiktoken>=0.7

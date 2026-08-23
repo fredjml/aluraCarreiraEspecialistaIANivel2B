@@ -1,19 +1,64 @@
 # Avaliação do pipeline RAG
 
-O conjunto de validação tem oito perguntas em `src/evaluation.py`, cada uma com gabarito, resposta sem RAG, resposta com RAG, critério e resultado.
+O conjunto de validação tem oito perguntas em `src/evaluation.py`. Cada execução
+compara uma resposta sem RAG com uma resposta RAG para o mesmo gabarito e grava
+os modos realmente usados em `outputs/avaliacao_rag.csv`.
 
-## Política de medição
+## Fluxo avaliado
 
-- **Gabarito:** fato esperado extraído do dataset fictício.
-- **Sem RAG:** fica `PENDENTE` sem uma API de LLM configurada.
-- **Com RAG:** resposta do modo local determinístico com fontes.
-- **Critério:** conter o fato do gabarito e citar pelo menos uma fonte recuperada.
-- **Resultado:** `compatível com gabarito local` ou `manual: verificar`.
+| Componente | Com Gemini | Fallback local |
+|---|---|---|
+| Sem RAG | Gemini responde sem receber políticas | Registra que geração livre não está disponível |
+| Recuperação | Chroma + embeddings traz candidatos e fusão lexical completa a cobertura | Mesmo Chroma local; sem API externa |
+| Reranking | Gemini pontua e ordena os 8 candidatos | Ordem da similaridade lexical |
+| Geração RAG | Gemini responde apenas com os 4 melhores chunks e cita `[id=N]` | Concatena evidências e cita `id=N` |
+| Juiz | Gemini compara resposta e gabarito com saída estruturada | Correspondência normalizada e exigência de fonte |
 
-Não há porcentagem final inventada. Para obter uma taxa, execute o relatório, revise os casos marcados e registre a decisão humana ou habilite um juiz de LLM com credencial autorizada.
+Falhas de inicialização ou chamada externa não são tratadas como sucesso. A
+coluna `fallbacks` registra o componente, tipo do erro e motivo; as colunas
+`modo_sem_rag`, `modo_reranking`, `modo_com_rag` e `modo_juiz` identificam a
+origem de cada resultado.
+
+## Configuração segura
+
+1. Copie `.env.example` para `.env`.
+2. Grave a chave somente em `GOOGLE_API_KEY` dentro de `.env`.
+3. Defina `BYTEBANK_LLM_MODE=gemini`.
+4. Mantenha `BYTEBANK_GEMINI_MODEL=gemini-3.5-flash-lite` ou informe outro modelo
+   autorizado.
+5. Nunca adicione `.env` ao Git.
+
+A implementação usa a SDK oficial `google-genai` e saída estruturada Pydantic
+para reranking e juiz. O modo `auto` usa Gemini apenas quando encontra a chave;
+o modo `local` proíbe chamadas externas mesmo que uma chave exista.
+
+Uma rodada completa com oito casos realiza até 40 chamadas (baseline,
+reranking, geração RAG e dois julgamentos por caso). Verifique cota, custo e
+política de uso antes de executar em ambiente compartilhado.
+
+## Execução
 
 ```powershell
-python -m src.evaluation
+# Validação offline e reproduzível
+python -m src.evaluation --mode local
+
+# Gemini quando GOOGLE_API_KEY estiver configurada
+python -m src.evaluation --mode gemini
+
+# Gemini se houver chave; fallback local caso contrário
+python -m src.evaluation --mode auto
 ```
 
-O arquivo gerado em `outputs/avaliacao_rag.csv` é ignorado pelo Git por conter saída de execução.
+## Resultado verificado em 22/08/2026
+
+A execução com `gemini-3.5-flash-lite` e Chroma obteve **1/8 (12,5%) sem RAG** e
+**8/8 (100%) com RAG**. A recuperação usou `chroma_embeddings+lexical_hybrid`
+nos oito casos. A cota do provedor respondeu HTTP 429 após parte da rodada:
+três casos concluíram todas as etapas Gemini e cinco usaram algum fallback local.
+O arquivo versionado `outputs/avaliacao_rag.csv` registra o modo de cada etapa,
+as fontes e os fallbacks; por isso o resultado não é apresentado como uma rodada
+100% Gemini.
+
+O CSV em `outputs/` é ignorado pelo Git porque contém saída de execução, não
+credenciais. Para uma evidência reproduzível, registre também modelo, data,
+parâmetros, quantidade de casos e eventuais limites de cota.

@@ -1,107 +1,246 @@
-"""Gera relatório Markdown e DOCX sem dependências externas."""
+"""Gera DOCX profissionais a partir dos dois relatórios Markdown versionados."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+import re
 from pathlib import Path
-from zipfile import ZIP_DEFLATED, ZipFile
-from xml.sax.saxutils import escape
+
+from docx import Document
+from docx.enum.section import WD_SECTION
+from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+from docx.shared import Cm, Inches, Pt, RGBColor
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
-REPO = "https://github.com/fredjml/aluraCarreiraEspecialistaIANivel2B"
-
-ACCEPTANCE = [
-    ("E1", "Governança, ética, LGPD, LLM Ops e papéis do time", "docs/01-governanca.md; data/composicao_time.csv", "feito"),
-    ("E2", "Carreira em Y e estratégia de portfólio", "data/carreira_y.csv; README.md", "feito"),
-    ("E3", "Diagrama RAG completo e glossário com 15 termos", "diagrams/rag.mmd; data/glossario_rag.csv", "feito"),
-    ("E4", "ADR de RAG, embeddings, vector store e metadados", "docs/02-arquitetura-rag.md", "feito"),
-    ("E5", "Dataset fictício com 50 políticas e contrato de campos", "data/politicas_bytebank.csv", "feito"),
-    ("E6", "Chunking 500/100, categoria semântica e metadados", "src/rag_pipeline.py; tests/test_rag_pipeline.py", "feito"),
-    ("E7", "Recuperação k=4 e reranking demonstrativo 8 para 4", "src/rag_pipeline.py", "feito"),
-    ("E8", "Avaliação com 8 perguntas e rastreabilidade", "src/evaluation.py; docs/05-avaliacao-rag.md", "feito"),
-    ("E9", "Supervisor, três agentes, TypedDict e roteamento", "src/multiagent_graph.py; tests/test_multiagent_graph.py", "feito"),
-    ("E10", "A2A, MCP, Agent Cards, memória, HITL e snapshots", "docs/04-arquitetura-multiagente.md; data/agent_cards.csv", "feito"),
-    ("E11", "Interface Gradio e modo local sem credenciais", "src/app.py; .env.example", "feito"),
-    ("E12", "Rules, skill, script MCP e validação de conformidade", ".github/; scripts/validate_project.py; scripts/mcp_tools.py", "feito"),
-    ("E13", "Relatórios de implementação em Markdown e DOCX", "docs/relatorio_implementacao_bytebank.md; .docx", "feito"),
-]
-
-ANALYSES = [
-    ("Análise 1 - cobertura", "Os requisitos do enunciado foram mapeados para artefatos E1-E13; o script de conformidade verifica os contratos críticos."),
-    ("Análise 2 - execução", "O caminho local é determinístico e reproduzível. APIs externas permanecem opcionais e são explicitamente marcadas como pendentes."),
-    ("Análise 3 - riscos", "Os principais riscos residuais são qualidade semântica do fallback lexical, ausência de juiz LLM e ausência de publicação/Google Sheets/Power BI."),
-]
-REVIEWS = [
-    ("Revisão 1 - funcional", "Testes confirmam carga de 50 documentos, preservação de metadados, reranking 8->4 e três intenções."),
-    ("Revisão 2 - segurança", "Não há credenciais reais; .env é ignorado; MCP separa mutações, leituras e prompts; conteúdo é fictício."),
-    ("Revisão 3 - entrega", "README, plano, diagramas, dados, código, testes, skill, rules e relatórios estão presentes; publicação não é alegada como executada."),
-]
+REPORTS = (
+    ("relatorio_levantamento_bytebank.md", "Levantamento", "Requisitos, lacunas, decisões e controles"),
+    ("relatorio_implementacao_bytebank.md", "Implementação", "Evidências técnicas e prontidão para avaliação"),
+)
+NAVY = "0F3557"
+BLUE = RGBColor(15, 90, 138)
+LIGHT_BLUE = "EAF4FB"
+LIGHT_GRAY = "F3F6F8"
 
 
-def markdown() -> str:
-    lines = [
-        "# Relatório de implementação - Bytebank Nivel 2", "",
-        f"**Data UTC:** {datetime.now(timezone.utc).isoformat()}  ",
-        f"**Repositório:** {REPO}", "",
-        "## Objetivo", "",
-        "Implementar as quatro etapas do desafio usando apenas dados fictícios, com documentação, código local, validações e rastreabilidade.", "",
-        "## Passo a passo", "",
-        "1. Levantamento do enunciado e inventário da raiz `Nivel2`.",
-        "2. Criação do plano de execução e regras de segurança.",
-        "3. Fundação: README, governança, carreira, dataset e ambiente.",
-        "4. Arquitetura RAG, ADR, glossário e diagrama.",
-        "5. Pipeline local, avaliação estruturada e metadados.",
-        "6. Grafo multiagente, A2A, MCP, HITL, Agent Cards e Gradio.",
-        "7. Scripts MCP local, validação de conformidade e testes.",
-        "8. Três análises, três revisões e geração deste relatório.", "",
-        "## Testes e evidências", "",
-        "- `python -m compileall -q src tests scripts`: aprovado.",
-        "- `python -m unittest discover -s tests -v`: aprovado.",
-        "- `python scripts/validate_project.py`: aprovado.",
-        "- `python -m src.rag_pipeline --question \"Qual o limite do Pix noturno?\"`: executado com fontes e metadados.",
-        "- `python -m src.multiagent_graph`: executado com três domínios.",
-        "- `python -m src.evaluation`: relatório de oito perguntas gerado; juiz LLM marcado como pendente.",
-        "- `python scripts/mcp_tools.py` com operações JSON: disponível para teste local.", "",
-        "## Critérios de aceite", "",
-        "| ID | Critério | Evidência | Status |", "|---|---|---|---|",
-    ]
-    lines += [f"| {item[0]} | {item[1]} | `{item[2]}` | **{item[3]}** |" for item in ACCEPTANCE]
-    lines += ["", "## Análises", ""] + [f"### {title}\n\n{text}\n" for title, text in ANALYSES]
-    lines += ["## Revisões", ""] + [f"### {title}\n\n{text}\n" for title, text in REVIEWS]
-    lines += ["## Como testar", "", "```powershell", ".\\.venv\\Scripts\\Activate.ps1", "python scripts/validate_project.py", "python -m unittest discover -s tests -v", "python -m src.rag_pipeline --question \"Qual é a anuidade do cartão Platinum?\"", "python -m src.multiagent_graph", "'{'\"operation\":\"list\"'}' | python scripts/mcp_tools.py", "python -m src.evaluation", "```", "", "## Pendências externas", "", "GitHub Pages, Google Sheets, APIs de LLM, juiz automático, screenshots de Power BI e publicação adicional não foram executados. Requerem credenciais, dados ou ação externa.", "", f"## Repositório", "", REPO, ""]
-    return "\n".join(lines)
+def shade(cell, color: str) -> None:
+    properties = cell._tc.get_or_add_tcPr()
+    fill = OxmlElement("w:shd")
+    fill.set(qn("w:fill"), color)
+    properties.append(fill)
 
 
-def docx_xml(text: str) -> tuple[str, str]:
-    paragraphs = []
-    for line in text.splitlines():
-        if not line:
-            paragraphs.append("<w:p/>")
+def set_cell_margins(cell, top=90, start=100, bottom=90, end=100) -> None:
+    tc = cell._tc
+    tc_pr = tc.get_or_add_tcPr()
+    margins = tc_pr.first_child_found_in("w:tcMar")
+    if margins is None:
+        margins = OxmlElement("w:tcMar")
+        tc_pr.append(margins)
+    for edge, value in (("top", top), ("start", start), ("bottom", bottom), ("end", end)):
+        node = OxmlElement(f"w:{edge}")
+        node.set(qn("w:w"), str(value))
+        node.set(qn("w:type"), "dxa")
+        margins.append(node)
+
+
+def add_page_number(paragraph) -> None:
+    paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    run = paragraph.add_run("PÁGINA ")
+    run.font.size = Pt(8)
+    field = OxmlElement("w:fldSimple")
+    field.set(qn("w:instr"), "PAGE")
+    paragraph._p.append(field)
+
+
+def configure_document(document: Document, subtitle: str) -> None:
+    section = document.sections[0]
+    section.page_height = Cm(29.7)
+    section.page_width = Cm(21)
+    section.top_margin = Cm(1.8)
+    section.bottom_margin = Cm(1.7)
+    section.left_margin = Cm(1.9)
+    section.right_margin = Cm(1.9)
+
+    styles = document.styles
+    normal = styles["Normal"]
+    normal.font.name = "Aptos"
+    normal.font.size = Pt(10.5)
+    normal.font.color.rgb = RGBColor(38, 58, 73)
+    normal.paragraph_format.space_after = Pt(5)
+    normal.paragraph_format.line_spacing = 1.12
+
+    for name, size in (("Title", 31), ("Heading 1", 19), ("Heading 2", 14), ("Heading 3", 11)):
+        style = styles[name]
+        style.font.name = "Aptos Display"
+        style.font.size = Pt(size)
+        style.font.color.rgb = BLUE
+        style.font.bold = True
+        style.paragraph_format.space_before = Pt(12 if name != "Title" else 0)
+        style.paragraph_format.space_after = Pt(6)
+        style.paragraph_format.keep_with_next = True
+
+    header = section.header
+    header.is_linked_to_previous = False
+    p = header.paragraphs[0]
+    p.text = f"BYTEBANK  /  AI ECOSYSTEM     {subtitle.upper()}"
+    p.style = styles["Caption"]
+    p.runs[0].font.color.rgb = BLUE
+    p.runs[0].font.bold = True
+    p.runs[0].font.size = Pt(8)
+    add_page_number(section.footer.paragraphs[0])
+
+
+def add_cover(document: Document, report_name: str, tagline: str) -> None:
+    spacer = document.add_paragraph()
+    spacer.paragraph_format.space_after = Pt(28)
+    band = document.add_table(rows=1, cols=1)
+    band.autofit = False
+    band.columns[0].width = Inches(6.7)
+    cell = band.cell(0, 0)
+    shade(cell, NAVY)
+    set_cell_margins(cell, top=520, start=420, bottom=520, end=420)
+    p = cell.paragraphs[0]
+    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    eyebrow = p.add_run("BYTEBANK  ·  ESPECIALISTA EM IA NÍVEL 2\n")
+    eyebrow.font.name = "Aptos"
+    eyebrow.font.size = Pt(10)
+    eyebrow.font.bold = True
+    eyebrow.font.color.rgb = RGBColor(163, 214, 242)
+    title = p.add_run(f"Relatório de {report_name}\n")
+    title.font.name = "Aptos Display"
+    title.font.size = Pt(31)
+    title.font.bold = True
+    title.font.color.rgb = RGBColor(255, 255, 255)
+    sub = p.add_run(tagline)
+    sub.font.name = "Aptos"
+    sub.font.size = Pt(13)
+    sub.font.color.rgb = RGBColor(231, 244, 251)
+
+    p = document.add_paragraph()
+    p.paragraph_format.space_before = Pt(24)
+    p.add_run("DESAFIO DE PORTFÓLIO\n").bold = True
+    p.add_run("Governança · RAG · ChromaDB · Multiagentes · A2A · MCP · HITL\n")
+    date_run = p.add_run("22 de agosto de 2026")
+    date_run.font.color.rgb = BLUE
+    document.add_paragraph(
+        "Documento de projeto fictício. Não contém dados reais de clientes nem credenciais."
+    ).style = document.styles["Caption"]
+    document.add_page_break()
+
+
+def clean_inline(text: str) -> str:
+    return text.replace("**", "").replace("`", "")
+
+
+def set_repeat_table_header(row) -> None:
+    tr_pr = row._tr.get_or_add_trPr()
+    repeat = OxmlElement("w:tblHeader")
+    repeat.set(qn("w:val"), "true")
+    tr_pr.append(repeat)
+
+
+def add_markdown_table(document: Document, lines: list[str]) -> None:
+    raw_rows = [[clean_inline(cell.strip()) for cell in line.strip().strip("|").split("|")] for line in lines]
+    rows = [raw_rows[0]] + raw_rows[2:]
+    table = document.add_table(rows=len(rows), cols=len(rows[0]))
+    table.style = "Table Grid"
+    table.autofit = True
+    for r_idx, row in enumerate(rows):
+        for c_idx, value in enumerate(row):
+            cell = table.cell(r_idx, c_idx)
+            cell.text = value
+            cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+            set_cell_margins(cell)
+            for paragraph in cell.paragraphs:
+                paragraph.paragraph_format.space_after = Pt(1)
+                for run in paragraph.runs:
+                    run.font.size = Pt(8.5)
+            if r_idx == 0:
+                shade(cell, NAVY)
+                for run in cell.paragraphs[0].runs:
+                    run.font.color.rgb = RGBColor(255, 255, 255)
+                    run.font.bold = True
+            elif r_idx % 2 == 0:
+                shade(cell, LIGHT_BLUE)
+    set_repeat_table_header(table.rows[0])
+    document.add_paragraph().paragraph_format.space_after = Pt(1)
+
+
+def add_code_line(document: Document, text: str) -> None:
+    p = document.add_paragraph()
+    p.paragraph_format.space_after = Pt(0)
+    p.paragraph_format.left_indent = Cm(0.35)
+    shade_proxy = OxmlElement("w:shd")
+    shade_proxy.set(qn("w:fill"), LIGHT_GRAY)
+    p._p.get_or_add_pPr().append(shade_proxy)
+    run = p.add_run(text or " ")
+    run.font.name = "Cascadia Mono"
+    run.font.size = Pt(8.5)
+
+
+def markdown_to_docx(markdown_path: Path, output_path: Path, report_name: str, tagline: str) -> None:
+    text = markdown_path.read_text(encoding="utf-8")
+    document = Document()
+    configure_document(document, report_name)
+    add_cover(document, report_name, tagline)
+    document.core_properties.title = f"Relatório de {report_name} · Bytebank Nível 2"
+    document.core_properties.subject = "Entregáveis do desafio Especialista em IA Nível 2"
+    document.core_properties.author = "Projeto Bytebank AI Ecosystem"
+
+    lines = text.splitlines()
+    index = 1 if lines and lines[0].startswith("# ") else 0
+    in_code = False
+    while index < len(lines):
+        line = lines[index]
+        if line.startswith("```"):
+            in_code = not in_code
+            index += 1
+            continue
+        if in_code:
+            add_code_line(document, line)
+            index += 1
+            continue
+        if line.startswith("|") and index + 1 < len(lines) and re.match(r"^\|[-:| ]+\|$", lines[index + 1]):
+            table_lines = [line, lines[index + 1]]
+            index += 2
+            while index < len(lines) and lines[index].startswith("|"):
+                table_lines.append(lines[index])
+                index += 1
+            add_markdown_table(document, table_lines)
+            continue
+        if not line.strip():
+            index += 1
+            continue
+        heading = re.match(r"^(#{1,3})\s+(.+)$", line)
+        if heading:
+            level = len(heading.group(1))
+            document.add_heading(clean_inline(heading.group(2)), level=level)
+        elif re.match(r"^\d+\.\s+", line):
+            document.add_paragraph(clean_inline(re.sub(r"^\d+\.\s+", "", line)), style="List Number")
+        elif line.startswith("- "):
+            document.add_paragraph(clean_inline(line[2:]), style="List Bullet")
+        elif line.startswith("> "):
+            p = document.add_paragraph(clean_inline(line[2:]))
+            p.style = document.styles["Quote"]
         else:
-            clean = line.replace("**", "").replace("`", "")
-            paragraphs.append(f"<w:p><w:r><w:t xml:space=\"preserve\">{escape(clean)}</w:t></w:r></w:p>")
-    body = "".join(paragraphs) + "<w:sectPr><w:pgSz w:w=\"12240\" w:h=\"15840\"/><w:pgMar w:top=\"1440\" w:right=\"1440\" w:bottom=\"1440\" w:left=\"1440\"/></w:sectPr>"
-    document = f"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:body>{body}</w:body></w:document>"
-    styles = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><w:styles xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:style w:type=\"paragraph\" w:default=\"1\" w:styleId=\"Normal\"><w:name w:val=\"Normal\"/><w:rPr><w:sz w:val=\"22\"/></w:rPr></w:style></w:styles>"
-    return document, styles
+            p = document.add_paragraph(clean_inline(line))
+            if line.startswith("**"):
+                for run in p.runs:
+                    run.bold = True
+        index += 1
+
+    document.save(output_path)
 
 
-def write_docx(path: Path, text: str) -> None:
-    document, styles = docx_xml(text)
-    content_types = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/><Default Extension=\"xml\" ContentType=\"application/xml\"/><Override PartName=\"/word/document.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml\"/><Override PartName=\"/word/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml\"/></Types>"
-    rels = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"word/document.xml\"/></Relationships>"
-    document_rels = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles\" Target=\"styles.xml\"/></Relationships>"
-    with ZipFile(path, "w", ZIP_DEFLATED) as archive:
-        archive.writestr("[Content_Types].xml", content_types)
-        archive.writestr("_rels/.rels", rels)
-        archive.writestr("word/_rels/document.xml.rels", document_rels)
-        archive.writestr("word/document.xml", document)
-        archive.writestr("word/styles.xml", styles)
+def main() -> None:
+    for source, name, tagline in REPORTS:
+        output = DOCS / source.replace(".md", ".docx")
+        markdown_to_docx(DOCS / source, output, name, tagline)
+        print(f"Gerado: {output}")
 
 
 if __name__ == "__main__":
-    DOCS.mkdir(exist_ok=True)
-    report = markdown()
-    (DOCS / "relatorio_implementacao_bytebank.md").write_text(report, encoding="utf-8")
-    write_docx(DOCS / "relatorio_implementacao_bytebank.docx", report)
-    print(f"Relatórios criados em {DOCS}")
+    main()
