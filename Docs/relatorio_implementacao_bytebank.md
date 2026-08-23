@@ -28,20 +28,44 @@ A integração usa a SDK `google-genai`, saídas estruturadas Pydantic e `gemini
 
 O LangGraph contém supervisor, agentes `conta_corrente`, `cartao_credito` e `suporte`, roteamento condicional e síntese. A classificação usa Gemini quando disponível e fallback local rastreável. O servidor FastMCP expõe políticas, saldo, fatura, prompt fundamentado e ferramentas `criar_conta`/`solicitar_cartao`. As mutações exigem `aprovado_por_humano`; Platinum marca pausa HITL no estado.
 
-## Evidências de aceite
+## Tabela final de critérios de aceite
 
-| ID | Evidência | Resultado |
-|---|---|---|
-| E1 | `Docs/01-governanca.md` + planilha Google | concluído |
-| E2 | `diagrams/rag.mmd` + `diagrams/rag.svg` + glossário | concluído |
-| E3 | `src/rag_pipeline.py` + Chroma + 50 políticas | concluído |
-| E4 | `outputs/avaliacao_rag.csv` | RAG 8/8; fallbacks 429 registrados |
-| E5 | `src/multiagent_graph.py` + Agent Cards | concluído |
-| E6 | `scripts/bytebank_mcp_server.py` + testes HITL | concluído |
-| E7 | README de portfólio + dois SVGs | concluído |
-| E8 | relatórios Markdown/DOCX + análises/revisões | concluído |
-| E9 | testes unitários e validador de conformidade | aprovado |
-| E10 | Google Sheets e GitHub Pages | verificados |
+| ID | Critério de aceite | Evidência principal | Status |
+|---|---|---|---|
+| 1.1 | Planilha com cargos, responsabilidades, nível e relação com agentes de IA; mínimo de cinco papéis | `data/composicao_time.csv` e planilha Google | FEITO |
+| 1.2 | Aba de carreira em Y com caminhos de gestão e especialista | `data/carreira_y.csv` e planilha Google | FEITO |
+| 1.3 | Princípios de privacidade/LGPD, imparcialidade, transparência, explicabilidade, reprodutibilidade e responsabilidade | `Docs/01-governanca.md` | FEITO |
+| 1.4 | Três causas de alucinação e ao menos duas técnicas de mitigação | `Docs/01-governanca.md` | FEITO |
+| 1.5 | Quatro pilares de LLM Ops aplicados ao contexto bancário | `Docs/01-governanca.md` | FEITO |
+| 1.6 | README narrativo e publicação no GitHub Pages | `README.md`, `index.md` e site publicado | FEITO |
+| 2.1 | Diagrama RAG completo: fonte, carga, chunking, overlap, embeddings, vector store, retriever, reranking, LLM e fontes | `diagrams/rag.mmd` e `diagrams/rag.svg` | FEITO |
+| 2.2 | Comparação FAISS, ChromaDB e Supabase com escolha justificada | `Docs/02-arquitetura-rag.md` | FEITO |
+| 2.3 | Glossário com os 15 termos obrigatórios e exemplos Bytebank | `data/glossario_rag.csv` e planilha Google | FEITO |
+| 2.4 | ADR comparando RAG e fine-tuning, critérios de embeddings e estratégia de metadados | `Docs/02-arquitetura-rag.md` | FEITO |
+| 3.1 | Carga do CSV em documentos com `id`, `dominio`, `secao` e `nivel_acesso` | `src/rag_pipeline.py` e 50 políticas | FEITO |
+| 3.2 | Chunking recursivo 500/100 e categoria semântica enriquecida | `src/rag_pipeline.py` e testes de metadados | FEITO |
+| 3.3 | Embeddings locais, Chroma persistente e retriever por similaridade com `k=4` | `src/rag_pipeline.py` e testes vetoriais | FEITO |
+| 3.4 | Recuperação de oito candidatos, reranking e seleção dos quatro melhores | `src/rag_pipeline.py` e validador de conformidade | FEITO |
+| 3.5 | Comparação da mesma pergunta sem RAG e com RAG | `src/evaluation.py` e `outputs/avaliacao_rag.csv` | FEITO |
+| 3.6 | Dataset de validação com oito perguntas e gabaritos | `src/evaluation.py` | FEITO |
+| 3.7 | Avaliação estruturada, percentual de acertos e tabela Markdown por caso | `Docs/05-avaliacao-rag.md` e CSV de avaliação | FEITO |
+| 3.8 | Rastreabilidade de modos, fontes e fallbacks sem mascarar falhas externas | `outputs/avaliacao_rag.csv` e `Docs/05-avaliacao-rag.md` | FEITO |
+| 4.1 | Diagrama com front-end, BFA, três agentes, Agent Cards, A2A, MCP, HITL e snapshots | `diagrams/multiagente.mmd` e SVG | FEITO |
+| 4.2 | Comparação A2A/MCP e conectividade por polling, SSE e webhook | `Docs/04-arquitetura-multiagente.md` | FEITO |
+| 4.3 | Memórias semântica, episódica e procedural no contexto bancário | `Docs/04-arquitetura-multiagente.md` | FEITO |
+| 4.4 | Fluxo HITL Platinum com interrupção, snapshot, decisão e retomada/cancelamento | `Docs/04-arquitetura-multiagente.md` e testes | FEITO |
+| 4.5 | `StateGraph`, estado tipado, classificação, três agentes, rota condicional e síntese | `src/multiagent_graph.py` | FEITO |
+| 4.6 | Grafo Mermaid e testes das três rotas | `diagrams/multiagente.mmd` e `tests/test_multiagent_graph.py` | FEITO |
+| 4.7 | Interface Gradio exibindo resposta e classificação | `src/app.py` | FEITO |
+| 4.8 | MCP separando recursos, ferramentas e prompts, com bloqueio de mutações por HITL | `scripts/bytebank_mcp_server.py` e testes MCP | FEITO |
+| 4.9 | README final com arquitetura, tecnologias, desafios e aprendizados | `README.md` | FEITO |
+| V.1 | Suíte unitária local | 14 testes executados em 23/08/2026 | FEITO |
+| V.2 | Validador estrutural, de dados, sintaxe e contratos | `python scripts/validate_project.py`: `CONFORMIDADE=OK` | FEITO |
+| V.3 | Integridade do histórico Git local | `git log` e `git fsck --full` após recuperação do objeto `8f2a23a…` | FEITO |
+
+Todos os critérios marcados como `FEITO` possuem evidência local ou externa
+indicada na mesma linha. A rodada Gemini permanece qualificada: três casos
+concluíram geração e julgamento externos; cinco acionaram fallback por HTTP 429.
 
 ## Segurança
 
@@ -61,7 +85,7 @@ O banco, clientes e políticas são fictícios. O modelo de embeddings compacto 
 ```powershell
 .\.venv\Scripts\Activate.ps1
 python scripts/setup_runtime.py
-python -m unittest discover -s tests -v
+python -m unittest discover -s tests -v  # 14 testes aprovados em 23/08/2026
 python scripts/validate_project.py
 python -m src.rag_pipeline --mode local --retrieval chroma
 python -m src.evaluation --mode gemini --retrieval chroma

@@ -7,5 +7,6 @@ chroma_db/
 outputs/*
 !outputs/avaliacao_rag.csv
 .DS_Store
+*.log
 tmp/
 QuestionarioEspIANivel2B.pdf

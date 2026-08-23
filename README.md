@@ -4,6 +4,16 @@ Portfólio técnico do checkpoint Especialista em IA Nível 2: governança de IA
 
 > O Bytebank e todas as políticas deste repositório são fictícios. Não há dados reais de clientes nem integração financeira habilitada por padrão.
 
+## Sobre Mim
+
+Sou profissional de tecnologia em formação contínua na trilha Especialista em IA da Alura, com foco em transformar requisitos de negócio em soluções de IA rastreáveis, testáveis e documentadas. Neste portfólio, priorizo arquitetura, governança, segurança e evidências reproduzíveis, além da implementação funcional.
+
+## Projetos em Destaque
+
+### Bytebank AI Ecosystem
+
+O Bytebank precisava evoluir um atendimento baseado em LLM para um ecossistema capaz de consultar políticas com fontes, separar responsabilidades entre agentes e interromper ações sensíveis para aprovação humana. O projeto combina governança de IA, RAG com avaliação comparativa, arquitetura multiagente, protocolos A2A/MCP e Human-in-the-Loop. O principal desafio foi manter a execução útil mesmo diante de limites de API, registrando fallbacks sem apresentá-los como sucesso externo.
+
 ## Entregáveis
 
 | # | Entregável | Evidência principal | Status |
@@ -36,6 +46,8 @@ Rodada de 8 casos em 22/08/2026, com Chroma e `gemini-3.5-flash-lite`:
 
 O [CSV de avaliação](outputs/avaliacao_rag.csv) informa, por caso, fontes, modo de recuperação, reranking, geração, juiz e fallbacks. Assim, um resultado parcial nunca é apresentado como se fosse uma execução integral do Gemini.
 
+Validação final da entrega: **14/14 testes aprovados** e `CONFORMIDADE=OK`.
+
 ## Tecnologias
 
 Python 3.11+, LangChain Text Splitters, Sentence Transformers, ChromaDB, LangGraph, Google Gen AI SDK, Pydantic, FastMCP, Gradio e unittest. Diagramas em Mermaid e SVG; documentação em Markdown e DOCX.
@@ -58,6 +70,9 @@ python -m src.evaluation --mode gemini --retrieval chroma
 python -m src.multiagent_graph --mode auto
 python -m unittest discover -s tests -v
 python scripts/validate_project.py
+
+# Suite completa pelo npm (sintaxe, testes e conformidade)
+npm test
 ```
 
 Para Gemini, copie `.env.example` para `.env`, grave a chave apenas em `GOOGLE_API_KEY` e mantenha `.env` fora do Git. O modelo de embeddings funciona offline depois da preparação inicial.
@@ -106,7 +121,13 @@ A arquitetura só é confiável quando avaliação, controle de acesso e trilha 
 - [Planilha Google — Governança e RAG](https://docs.google.com/spreadsheets/d/1jJYN5SKQHZzNuuFBLDupMnQATMTfR3QBgl82MX-CJiE/edit?usp=sharing)
 - Relatório de levantamento: [Markdown](Docs/relatorio_levantamento_bytebank.md) · [DOCX](Docs/relatorio_levantamento_bytebank.docx)
 - Relatório de implementação: [Markdown](Docs/relatorio_implementacao_bytebank.md) · [DOCX](Docs/relatorio_implementacao_bytebank.docx)
+- Relatório executivo final: [Markdown](Docs/relatorio_executivo_implementacao_bytebank.md) · [DOCX](Docs/relatorio_executivo_implementacao_bytebank.docx)
 - [PR #1 integrado à `main`](https://github.com/fredjml/aluraCarreiraEspecialistaIANivel2B/pull/1)
 - [Publicação do GitHub Pages concluída](https://github.com/fredjml/aluraCarreiraEspecialistaIANivel2B/actions/runs/32612667137)
 
 Situação da entrega: os quatro entregáveis foram integrados à `main` pelo PR #1, e o portfólio foi publicado no GitHub Pages. Limites conhecidos: o dataset é fictício; o core bancário não foi fornecido; a rodada Gemini encontrou cota 429 e registrou os fallbacks.
+
+## Contato
+
+- GitHub: [@fredjml](https://github.com/fredjml)
+- Projeto: [aluraCarreiraEspecialistaIANivel2B](https://github.com/fredjml/aluraCarreiraEspecialistaIANivel2B)

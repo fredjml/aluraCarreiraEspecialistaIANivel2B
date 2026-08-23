@@ -1,0 +1,16 @@
+{
+  "name": "bytebank-ai-ecosystem-nivel2",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Orquestra as validacoes do projeto Python Bytebank AI Ecosystem Nivel 2.",
+  "scripts": {
+    "test": "npm run test:syntax && npm run test:unit && npm run test:project",
+    "test:syntax": ".venv\\Scripts\\python.exe -m compileall -q src scripts tests",
+    "test:unit": ".venv\\Scripts\\python.exe -m unittest discover -s tests -v",
+    "test:project": ".venv\\Scripts\\python.exe scripts\\validate_project.py"
+  },
+  "engines": {
+    "node": ">=18",
+    "npm": ">=9"
+  }
+}
