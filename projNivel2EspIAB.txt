@@ -1,0 +1,335 @@
+Desafio2-EspB:Nivel2
+Checkpoint Especialista em IA - Nível 2
+Descrição do projeto
+A equipe de inovação do Bytebank está estruturando um ecossistema de agentes de IA para atendimento 
+digital. O banco precisa de uma documentação completa que cubra desde a governança e os papéis do 
+time de dados/IA, passando pela arquitetura de um sistema RAG para consulta de documentos internos 
+(políticas de conta, regras de cartão, FAQ), até o desenho de uma arquitetura multiagente com roteamento, 
+protocolos de comunicação (A2A e MCP) e pontos de intervenção humana (Human-in-the-Loop).
+O projeto simula um cenário real de preparação para produção: a pessoa especialista em IA deve produzir 
+artefatos documentais, diagramas de arquitetura, um pipeline RAG funcional com dados fictícios do banco 
+e um protótipo de grafo multiagente — tudo acompanhado de narrativa de portfólio e boas práticas de 
+carreira.
+Entregáveis esperados ao final das 4 etapas:
+1)Documento de governança e composição do time de IA do Bytebank (planilha + texto).
+2)Diagrama de arquitetura RAG com fluxo completo e glossário técnico.
+3)Pipeline RAG funcional com dataset de políticas do banco, incluindo metadados e avaliação.
+$Diagrama de arquitetura multiagente com roteamento, protocolos A2A/MCP, Human-in-the-Loop 
+e README de portfólio.
+Preparando o ambiente
+Pré-requisitos gerais:
+Conta no GitHub com repositório público para hospedar os entregáveis.
+Conta no Google (para Google Sheets e, opcionalmente, Google Colab).
+Python 3.10+ instalado localmente (ou Google Colab).
+Ferramenta de diagramação: draw.io (https://app.diagrams.net) ou editor Mermaid online.
+Editor de texto/código: VS Code ou similar.
+Bibliotecas Python (instalar quando necessário nas etapas 3 e 4):
+Copiar
+pip install langchain langchain-community langchain-openai chromadb tiktoken pydantic langgraph 
+gradio python-dotenv
+Chaves de API:
+Chave da OpenAI (para embeddings e LLM) ou chave do Google Gemini (para usar ChatGoogleGenerativeAI). 
+Armazene em arquivo .env — nunca exponha no código.
+Datasets fornecidos:
+politicas_bytebank.csv — Documento fictício com políticas internas do Bytebank
+Cada linha representa um trecho de política interna. O dataset simula documentos de RH, operações e 
+produtos do banco.
+Coluna		Descrição
+id		Identificador único do trecho
+dominio		Área do banco (conta_corrente, cartao_credito, suporte, rh, seguranca)
+secao		Seção do documento original
+conteudo		Texto da política
+nivel_acesso	Público, interno ou restrito
+
+id,dominio,secao,conteudo,nivel_acesso
+1,conta_corrente,abertura,"Para abrir uma conta corrente no Bytebank é necessário ser maior de 18 anos e apresentar CPF válido, comprovante de residência emitido nos últimos 90 dias e documento de identidade com foto.",publico
+2,conta_corrente,abertura,Menores de 18 anos podem abrir conta conjunta com responsável legal que já possua conta ativa no Bytebank há pelo menos 6 meses.,publico
+3,conta_corrente,tarifas,"A conta corrente digital Bytebank não possui tarifa de manutenção mensal. Transferências via Pix são ilimitadas e gratuitas. TEDs possuem limite de 5 gratuitas por mês e R$9,90 por transferência adicional.",publico
+4,conta_corrente,tarifas,"Clientes com investimentos acima de R$50.000 no Bytebank Investimentos são automaticamente migrados para o plano Premium, que inclui TEDs ilimitadas e cartão de crédito sem anuidade.",interno
+5,conta_corrente,encerramento,O encerramento de conta corrente pode ser solicitado pelo aplicativo ou presencialmente. O prazo de processamento é de até 10 dias úteis. Saldos remanescentes serão transferidos para conta indicada.,publico
+6,conta_corrente,encerramento,"Contas com pendências financeiras (cheques devolvidos, empréstimos em aberto) não podem ser encerradas até a regularização completa das obrigações.",interno
+7,cartao_credito,solicitacao,"O cartão de crédito Bytebank está disponível nas modalidades Silver, Gold e Platinum. A aprovação depende de análise de crédito baseada em score interno e histórico de relacionamento com o banco.",publico
+8,cartao_credito,solicitacao,Para solicitar o cartão Platinum é necessário possuir renda comprovada mínima de R$15.000 mensais ou investimentos superiores a R$100.000 no Bytebank.,interno
+9,cartao_credito,anuidade,"O cartão Silver não possui anuidade. O cartão Gold possui anuidade de R$29,90 mensais, isentável com gastos acima de R$2.000 no mês. O cartão Platinum possui anuidade de R$59,90 mensais, isentável com gastos acima de R$5.000.",publico
+10,cartao_credito,anuidade,Clientes que possuem conta há mais de 2 anos e nunca tiveram inadimplência recebem desconto de 50% na anuidade do cartão Gold e Platinum automaticamente.,interno
+11,cartao_credito,limite,"O limite inicial do cartão é definido pela análise de crédito. Aumentos de limite podem ser solicitados a cada 6 meses. O limite máximo do Silver é R$5.000, do Gold é R$20.000 e do Platinum é R$80.000.",publico
+12,cartao_credito,bloqueio,"Em caso de perda ou roubo, o bloqueio do cartão deve ser feito imediatamente pelo aplicativo ou pela central de atendimento 0800-123-4567. O desbloqueio de cartão novo é feito exclusivamente pelo aplicativo.",publico
+13,cartao_credito,programa_pontos,"O programa Bytebank Rewards concede 1 ponto por real gasto no cartão Silver, 1,5 pontos no Gold e 2 pontos no Platinum. Pontos expiram em 24 meses após a data de acúmulo.",publico
+14,suporte,canais,"O Bytebank oferece atendimento via chat no aplicativo (24h), e-mail suporte@bytebank.com.br (resposta em até 24h úteis), telefone 0800-123-4567 (seg a sex 8h-20h) e agências físicas em capitais.",publico
+15,suporte,canais,Reclamações formais devem ser registradas na ouvidoria pelo e-mail ouvidoria@bytebank.com.br ou pelo telefone 0800-765-4321. O prazo de resposta da ouvidoria é de até 10 dias úteis.,publico
+16,suporte,sla,"Chamados de prioridade crítica (fraude, bloqueio indevido) devem ser resolvidos em até 4 horas. Chamados de prioridade alta (erro em transação) em até 24 horas. Chamados de prioridade média em até 72 horas.",interno
+17,suporte,sla,"Chamados de prioridade baixa (dúvidas gerais, solicitação de segunda via) possuem SLA de até 5 dias úteis. Chamados não resolvidos no prazo são escalados automaticamente para a coordenação.",interno
+18,rh,home_office,A política de trabalho remoto do Bytebank permite até 3 dias de home office por semana para áreas administrativas e tecnologia. Áreas de atendimento presencial seguem escala definida pela gestão.,interno
+19,rh,home_office,"Equipamentos para home office (notebook, monitor, cadeira ergonômica) são fornecidos pelo banco mediante assinatura de termo de responsabilidade. A devolução deve ocorrer em até 5 dias úteis após desligamento.",interno
+20,rh,ferias,"Férias devem ser solicitadas com antecedência mínima de 30 dias. O fracionamento é permitido em até 3 períodos, sendo que nenhum pode ser inferior a 5 dias corridos conforme legislação vigente.",interno
+21,rh,ferias,"Colaboradores com menos de 12 meses de contrato não possuem direito a férias proporcionais em caso de pedido de demissão, exceto nos casos previstos em convenção coletiva.",interno
+22,rh,codigo_conduta,"Todos os colaboradores devem seguir o Código de Conduta Bytebank que proíbe uso de informações privilegiadas, conflito de interesses e qualquer forma de discriminação. Violações são apuradas pelo Comitê de Ética.",interno
+23,rh,codigo_conduta,O uso de dispositivos pessoais para acessar sistemas internos é permitido apenas com autenticação multifator (MFA) e mediante instalação do software de segurança corporativo Bytebank Shield.,interno
+24,seguranca,autenticacao,"O acesso ao aplicativo Bytebank requer autenticação biométrica (digital ou facial) ou senha de 6 dígitos. Após 5 tentativas incorretas, a conta é bloqueada por 30 minutos.",publico
+25,seguranca,autenticacao,Transações acima de R$5.000 exigem confirmação adicional via token enviado por SMS ou e-mail cadastrado. O token expira em 5 minutos.,publico
+26,seguranca,lgpd,O Bytebank coleta e processa dados pessoais em conformidade com a LGPD (Lei 13.709/2018). O encarregado de dados (DPO) pode ser contatado pelo e-mail dpo@bytebank.com.br.,publico
+27,seguranca,lgpd,Dados de clientes são armazenados em servidores localizados no Brasil com criptografia AES-256. Backups são realizados diariamente e retidos por 5 anos conforme exigência regulatória do Banco Central.,interno
+28,seguranca,lgpd,Solicitações de exclusão de dados pessoais (direito ao esquecimento) são processadas em até 15 dias úteis. Dados necessários para cumprimento de obrigações legais são mantidos pelo prazo regulatório.,publico
+29,seguranca,fraude,O sistema antifraude do Bytebank utiliza machine learning para detectar transações suspeitas em tempo real. Transações bloqueadas geram notificação push e SMS ao cliente.,publico
+30,seguranca,fraude,Clientes que identificarem transações não reconhecidas devem contestar em até 48 horas pelo aplicativo. O estorno provisório é realizado em até 2 dias úteis enquanto a investigação é conduzida.,publico
+31,conta_corrente,pix,"Chaves Pix podem ser cadastradas usando CPF, e-mail, telefone ou chave aleatória. O limite de cadastro é de 5 chaves por conta. Transferências Pix são processadas em até 10 segundos.",publico
+32,conta_corrente,pix,O limite de transferência via Pix no período noturno (20h às 6h) é de R$1.000 por transação. O cliente pode solicitar aumento do limite noturno pelo aplicativo com prazo de ativação de 24 horas.,publico
+33,conta_corrente,emprestimo,"O Bytebank oferece empréstimo pessoal com taxas a partir de 1,49% ao mês. A simulação pode ser feita pelo aplicativo. A aprovação é sujeita a análise de crédito e o valor é creditado em até 1 dia útil.",publico
+34,conta_corrente,emprestimo,"Clientes com score interno abaixo de 400 pontos não são elegíveis para empréstimo pessoal. Clientes com score entre 400 e 600 possuem limite máximo de R$10.000 com taxa de 2,99% ao mês.",interno
+35,cartao_credito,internacional,"Compras internacionais no cartão de crédito Bytebank utilizam a cotação do dólar comercial do dia do fechamento da fatura acrescida de IOF de 6,38% e spread cambial de 4%.",publico
+36,cartao_credito,internacional,O cartão Platinum inclui seguro viagem internacional com cobertura de até USD 100.000 para despesas médicas. A ativação é automática ao comprar passagens aéreas com o cartão.,publico
+37,suporte,reclamacao,Reclamações não resolvidas pela ouvidoria podem ser direcionadas ao Banco Central pelo site consumidor.gov.br ou pelo telefone 145. O Bytebank se compromete a responder em até 10 dias úteis.,publico
+38,suporte,reclamacao,O índice de resolução de reclamações do Bytebank no Banco Central deve ser mantido acima de 80%. Áreas com índice abaixo dessa meta recebem plano de ação obrigatório da diretoria.,interno
+39,seguranca,incidentes,Incidentes de segurança da informação devem ser reportados imediatamente ao CSIRT (Computer Security Incident Response Team) pelo canal interno csirt@bytebank.com.br ou ramal 9999.,interno
+40,seguranca,incidentes,Vazamentos de dados pessoais devem ser comunicados à ANPD (Autoridade Nacional de Proteção de Dados) em até 72 horas conforme Art. 48 da LGPD. O DPO é responsável pela comunicação oficial.,interno
+41,conta_corrente,investimentos,"O Bytebank Investimentos oferece CDB, LCI, LCA, fundos de investimento e Tesouro Direto. Aplicações em CDB possuem liquidez diária e rendimento de 100% do CDI para valores acima de R$1.000.",publico
+42,conta_corrente,investimentos,"Clientes Premium têm acesso a fundos exclusivos com taxa de administração reduzida de 0,3% ao ano e assessoria personalizada de investimentos via videochamada agendada pelo aplicativo.",interno
+43,rh,treinamento,"O Bytebank oferece programa de capacitação contínua com orçamento anual de R$5.000 por colaborador para cursos, certificações e eventos. A aprovação é feita pela liderança direta.",interno
+44,rh,treinamento,"Colaboradores da área de tecnologia e dados possuem acesso a plataformas de aprendizado online (Alura, Coursera) custeadas integralmente pelo banco, sem limite de cursos.",interno
+45,cartao_credito,fatura,"A fatura do cartão de crédito é disponibilizada no aplicativo até o dia 5 de cada mês. O vencimento padrão é dia 15, podendo ser alterado para os dias 1, 5, 10, 15, 20 ou 25.",publico
+46,cartao_credito,fatura,O pagamento mínimo da fatura é de 15% do valor total. O não pagamento do valor mínimo até a data de vencimento gera juros de 14% ao mês mais multa de 2% sobre o saldo devedor.,publico
+47,seguranca,senhas,"Senhas de acesso ao internet banking devem conter no mínimo 8 caracteres incluindo letras maiúsculas, minúsculas, números e caracteres especiais. A troca obrigatória ocorre a cada 90 dias.",publico
+48,seguranca,senhas,"Colaboradores que acessam sistemas críticos (core banking, base de dados de clientes) devem utilizar autenticação multifator com token físico além da senha. Tokens são renovados anualmente.",interno
+49,conta_corrente,portabilidade,O Bytebank aceita portabilidade de salário de qualquer instituição financeira. A solicitação é feita pelo aplicativo e processada em até 5 dias úteis conforme regulamentação do Banco Central.,publico
+50,conta_corrente,portabilidade,Clientes que realizarem portabilidade de salário para o Bytebank recebem bônus de R$100 creditado na conta após o primeiro depósito de salário. Promoção válida para novos clientes.,publico
+
+1ª Etapa: Governança, time de IA e preparação de carreira
+Contexto: Antes de construir qualquer solução técnica, a diretoria do Bytebank precisa entender como será composto 
+o time de IA, quais princípios éticos guiarão o projeto e como a documentação será organizada para portfólio. 
+A equipe que você integra foi designada para produzir o documento fundacional do projeto.
+Pergunta-chave: "Como estruturar a governança de um projeto de IA em um banco digital, definindo papéis, 
+princípios éticos e estratégia de portfólio, de modo que o projeto seja sustentável e auditável?"
+Sua missão:
+Planilha de composição do time (Google Sheets): Crie uma planilha com as colunas: Cargo, Responsabilidades principais,
+ Nível esperado (Jr/Pl/Sr), Relação com o projeto de agentes IA. Inclua pelo menos 5 papéis distintos 
+(engenheiro de dados, analista de dados, cientista de dados, DPO, engenheiro de IA) e justifique por que cada um é 
+necessário no contexto do Bytebank. Adicione uma aba com a distinção entre o caminho de gestão e o caminho de 
+especialista (carreira em Y), indicando qual caminho cada cargo tende a seguir.
+Documento de princípios éticos e conformidade (Markdown no GitHub): Redija um documento em Markdown 
+contendo: (a) os princípios éticos aplicáveis ao projeto (privacidade/LGPD, imparcialidade, transparência, explicabilidade, 
+reprodutibilidade, responsabilidade); (b) como o Bytebank tratará alucinações de LLMs — descreva os três fatores 
+contribuintes e pelo menos duas técnicas de mitigação; (c) os quatro pilares do LLM Ops (gerenciamento, otimização, 
+automação, qualidade) aplicados ao contexto bancário.
+README de portfólio (Markdown + GitHub Pages): Crie um repositório no GitHub com seu nome de usuário e 
+configure o README.md como página de apresentação pessoal. Inclua seções "Sobre Mim", "Projetos em Destaque" 
+(com este projeto do Bytebank como primeiro item, usando storytelling: motivação, problema resolvido, desafios técnicos) 
+e "Contato". Publique via GitHub Pages.
+Ferramentas: Google Sheets, Markdown, GitHub, GitHub Pages
+Dicas de troubleshooting para a 1ª etapa:
+Se tiver dúvida sobre quais papéis incluir, relembre a analogia da cozinha de restaurante: cada cargo tem uma função 
+específica e a presença de cada um depende do tamanho e maturidade da empresa.
+Ao descrever alucinações, não confunda com erros simples de processamento — alucinação envolve geração de 
+conteúdo plausível porém incorreto.
+Para o GitHub Pages, lembre-se de que o repositório deve ser público e o nome deve ser exatamente seu username.
+
+2ª Etapa: Arquitetura RAG e glossário técnico
+Contexto: Com a governança definida, a equipe técnica precisa projetar a arquitetura do sistema RAG que permitirá 
+ao chatbot do Bytebank consultar políticas internas antes de responder. Antes de codificar, é necessário documentar o 
+fluxo completo e garantir que toda a equipe compartilhe o mesmo vocabulário técnico.
+Pergunta-chave: "Como representar visualmente todas as etapas de uma pipeline RAG — desde a ingestão de 
+documentos até a geração de resposta — de forma que pessoas técnicas e não técnicas compreendam o fluxo e 
+possam auditá-lo?"
+Sua missão:
+Diagrama da pipeline RAG (draw.io ou Mermaid): Desenhe um diagrama completo contendo: 
+(a) fontes de dados (CSV de políticas do Bytebank); 
+(b) etapa de carregamento de documentos; 
+(c) estratégia de chunking (indique tipo escolhido — tamanho fixo, sentenças ou parágrafos — e justifique); 
+(d) overlapping entre chunks; 
+(e) geração de embeddings (indique modelo e justifique a escolha entre proprietário e open source considerando 
+sensibilidade dos dados bancários); 
+(f) armazenamento em vector store (compare FAISS, ChromaDB e Supabase e justifique a escolha); 
+(g) retriever com busca por similaridade; 
+(h) etapa de re-ranking; 
+(i) geração de resposta pelo LLM; 
+(j) retorno dos source_documents para rastreabilidade.
+Glossário técnico (Google Sheets): Crie uma planilha com as colunas: Termo, Definição, Exemplo no contexto Bytebank. 
+Inclua pelo menos 15 termos: embedding, chunk, overlap, vector store, retriever, similaridade de cosseno, 
+distância euclidiana, re-ranking, metadados, token, softmax, ANN (Approximate Nearest Neighbors), busca semântica, 
+fine-tuning, RAG. Para cada termo, forneça um exemplo concreto aplicado ao domínio bancário.
+Documento de decisões arquiteturais (Markdown): Redija um ADR (Architecture Decision Record) 
+em Markdown justificando: (a) por que RAG foi escolhido em vez de fine-tuning para o Bytebank (compare custo, 
+atualização de conhecimento e casos de uso); (b) critérios de escolha do modelo de embeddings (janela de contexto, 
+dimensão do vetor, suporte multilíngue); (c) estratégia de metadados para os chunks (origem, seção, categoria, 
+nível de acesso) e como eles melhoram a filtragem na recuperação.
+Ferramentas: draw.io, Mermaid, Google Sheets, Markdown, GitHub
+Dicas de troubleshooting para a 2ª etapa:
+Ao comparar embeddings proprietários vs. open source, lembre-se de que dados bancários são sensíveis — isso deve 
+pesar na decisão.
+No glossário, não confunda busca semântica (por significado) com busca por palavra-chave exata.
+No ADR, evite afirmar que RAG é sempre melhor que fine-tuning — apresente trade-offs reais.
+
+3ª Etapa: Pipeline RAG funcional com avaliação
+Contexto: Chegou o momento de implementar a pipeline RAG projetada na etapa anterior. A equipe utilizará o 
+dataset politicas_bytebank.csv para construir um sistema de consulta que responda perguntas sobre políticas do 
+banco com rastreabilidade de fontes. Ao final, o sistema será avaliado com pares de perguntas e respostas.
+Pergunta-chave: "Como construir e avaliar um pipeline RAG completo que responda perguntas sobre políticas bancárias 
+com precisão, rastreabilidade de fontes e metadados enriquecidos?"
+Sua missão:
+(a)Carregamento e preparação dos dados (Python): Carregue o CSV politicas_bytebank.csv. Para cada linha, crie um 
+documento com page_content igual ao campo conteudo e metadata contendo id, dominio, secao e nivel_acesso. 
+Aplique RecursiveCharacterTextSplitter com chunk_size=500 e chunk_overlap=100. Enriqueça cada chunk com uma 
+categoria semântica adicional (ex.: "tarifas", "seguranca", "abertura", "cartao", "rh", "suporte") baseada em palavras-chave 
+do conteúdo.
+(b)Geração de embeddings e vector store (ChromaDB + OpenAIEmbeddings ou HuggingFace): Gere embeddings para 
+os chunks e armazene-os em um ChromaDB com persistência local. Configure um retriever com search_type='similarity' 
+e k=4. Teste com pelo menos 3 perguntas distintas (uma sobre conta corrente, uma sobre cartão de crédito e uma sobre 
+segurança/LGPD) e imprima os source_documents retornados, verificando se os metadados (domínio, seção, nível de 
+acesso) estão corretos.
+(c)Montagem da cadeia RAG com re-ranking (LangChain): Monte uma cadeia RAG que: (a) recupere 8 chunks via 
+similarity search; (b) aplique re-ranking usando o LLM para atribuir scores de relevância; (c) selecione os 4 melhores 
+chunks; (d) gere a resposta final. Compare a resposta do LLM sem RAG (prompt direto) com a resposta via RAG 
+para a mesma pergunta e documente a diferença.
+(d)Avaliação do pipeline: Crie um dataset de validação com pelo menos 8 pares de perguntas e respostas esperadas 
+(gabarito) baseados no CSV. Gere respostas com e sem RAG. Calcule a porcentagem de acertos usando uma abordagem 
+de LLM como juiz (QAEvalChain ou avaliação manual estruturada). Documente os resultados em uma tabela Markdown.
+(e)Ferramentas: Python, RecursiveCharacterTextSplitter, ChromaDB, OpenAIEmbeddings (ou HuggingFace Embeddings), 
+LangChain, ChatOpenAI (GPT-4o-mini) ou ChatGoogleGenerativeAI, Pydantic
+Dicas de troubleshooting para a 3ª etapa:
+Se o ChromaDB apresentar erro de persistência, verifique se o diretório de saída existe e se não há conflito com 
+execuções anteriores.
+Ao enriquecer metadados com categorias, normalize o texto com .lower() antes de verificar palavras-chave para evitar 
+falsos negativos.
+Na avaliação, lembre-se de que os objetos retornados pelo LLM podem ter atributo .content — extraia a string antes de 
+passar para a função de avaliação.
+
+4ª Etapa: Arquitetura multiagente, protocolos e Human-in-the-Loop
+Contexto: O Bytebank decidiu evoluir o chatbot para uma arquitetura multiagente. Haverá um supervisor/roteador que 
+classifica a intenção e direciona para agentes especializados (conta corrente, cartão de crédito, suporte). A equipe precisa 
+documentar a arquitetura completa, incluindo protocolos de comunicação entre agentes, pontos de intervenção humana 
+e um protótipo funcional do grafo.
+Pergunta-chave: "Como projetar e prototipar uma arquitetura multiagente com roteamento inteligente, protocolos 
+padronizados de comunicação (A2A e MCP) e pontos de intervenção humana, garantindo escalabilidade e governança?"
+Sua missão:
+1)Diagrama de arquitetura multiagente (draw.io ou Mermaid): 
+Desenhe a arquitetura completa contendo: 
+(a) front-end (Streamlit ou Gradio); 
+(b) BFA (Backend for Agents) com supervisor/roteador; 
+(c) três agentes especializados (conta_corrente, cartao_credito, suporte) isolados como serviços; 
+(d) catálogo de agentes com Agent Cards (inclua campos: nome, descrição, URL, skills, versão); 
+(e) fluxo de comunicação via protocolo A2A entre supervisor e agentes; 
+(f) servidor MCP com separação clara entre ferramentas (mutações: criar_conta, solicitar_cartao), 
+recursos (leitura: consultar_saldo, consultar_fatura) e prompts; 
+(g) pontos de Human-in-the-Loop (ex.: aprovação de crédito acima de determinado limite, contestação de fraude); 
+(h) indicação de onde snapshots são capturados para depuração.
+2)Documento de protocolos e decisões (Markdown): 
+Redija um documento que: 
+(a) compare A2A e MCP (foco, statefulness, complexidade, casos de uso) e justifique onde cada um é usado 
+na arquitetura do Bytebank; 
+(b) descreva os mecanismos de conectividade do A2A (polling, SSE/streaming, webhook) e qual seria adotado para 
+cada agente; 
+(c) explique os três tipos de memória (semântica, episódica, procedural) e como cada um se aplica ao contexto do 
+chatbot bancário; 
+(d) detalhe o fluxo de Human-in-the-Loop para o cenário de aprovação de cartão Platinum (interrupt_before, snapshot, 
+decisão humana, retomada ou cancelamento).
+3)Protótipo do grafo multiagente (LangGraph + Python): 
+Implemente um StateGraph simplificado com: 
+(a) AgentState usando TypedDict com campos mensagem, classificacao, resposta_agente, resposta_final; 
+(b) nó de classificação de intenção (usa LLM para classificar em "conta_corrente", "cartao_credito" ou "suporte"); 
+(c) nós simulados para cada agente especializado (podem retornar respostas fixas baseadas no domínio); 
+(d) aresta condicional que roteia para o agente correto; 
+(e) nó de síntese que formata a resposta final. Compile o grafo, visualize com Mermaid e teste com pelo menos 3 perguntas 
+de domínios diferentes.
+4)Interface e README final (Gradio + GitHub): 
+Crie uma interface mínima com Gradio que receba uma pergunta e exiba a resposta do grafo multiagente junto 
+com a classificação de intenção detectada. 
+Atualize o README do repositório do portfólio (criado na etapa 1) com: 
+(a)descrição do projeto completo usando storytelling, 
+(b)diagrama da arquitetura (imagem exportada), tecnologias utilizadas, desafios enfrentados e aprendizados. 
+O README deve seguir boas práticas de código limpo e documentação.
+Ferramentas: draw.io, Mermaid, Markdown, Python, LangGraph (StateGraph), ChatGoogleGenerativeAI ou 
+ChatOpenAI, Pydantic, TypedDict, Gradio, GitHub
+Dicas de troubleshooting para a 4ª etapa:
+No diagrama, não confunda ferramenta MCP (ação/mutação) com recurso MCP (leitura/dados) — use a regra de ouro: 
+ferramentas fazem mutações, recursos fazem leituras.
+Ao implementar o StateGraph, lembre-se de que a aresta condicional precisa retornar exatamente o nome do nó de 
+destino como string.
+Se o Mermaid não gerar PNG, use draw_mermaid() para obter o código textual e renderize em editor online.
+No README de portfólio, evite expor notebooks desorganizados — priorize documentação limpa e versionamento 
+adequado.
+Compartilhe seu trabalho e aprendizado:
+GitHub: Crie um repositório no GitHub para este projeto. Inclua seu código e, o mais importante, um 
+README.md detalhado. No README, explique o cenário de negócio, as perguntas que você respondeu, 
+as ferramentas que utilizou, os desafios que enfrentou (e como os superou!), e os principais insights e recomendações 
+que você gerou. Adicione screenshots do seu dashboard no Power BI!
+LinkedIn: Publique sobre sua experiência com este projeto no LinkedIn. Descreva o que você aprendeu, os desafios 
+superados e como você aplicou seus conhecimentos para resolver um problema de negócio. Marque as ferramentas 
+que você utilizou e use hashtags relevantes como #Alura #Especialista em IA #InteligenciaArtificial #PowerBI #CarreiraEmIA.
+Portfólio: Se você tem um portfólio online, adicione este projeto como um dos seus destaques. Ele demonstra sua 
+capacidade de ir do dado bruto à recomendação estratégica.
+
+
+aluraCarreiraEspecialistaIANivel1B
+Especialista em IA Nivel 1
+
+Prompt1:
+Analise profundamente o desafio a seguir e verifique quais são os conhecimentos necessários para realização do mesmo 
+inclusive sua persona e os softwares necessários para serem instalados. 
+Pra cada etapa estão descritos topicos como: Contexto, Pergunta-chave, Sua missão, Ferramentas e
+Dicas de troubleshooting para cada etapa. Entenda profundamente cada tópico, instale todas a ferramentas necessárias 
+ao desafio bem como elabore e informe todas as dependências de decisões humanas.Crie rules, skill, arquivos .md e o que mais 
+for necessário para que na implementação não seja mais necessário descrver o desafio nem gastar token de entrada para isso.
+Crie escripts de MCP para as ferramentas que não possuir acesso para construir os artefatos bem como fazer as revisões 
+e testes  de validação e conformidade para enterga. Gere um relatório executivo .docx com as características do anexo 
+colocando este relatório no diretório Docs que vc criará com tais informações bem como um relatório equivalente .md 
+também no diretório Docs.Utilize estes .md para qualquer dúvida antes de gastar tokens de entrada. 
+Neste momento vc não executará nada só fará um estudo detalhado do desafio e irá gerar as informações nos arquivos 
+de relatório com detalhes. Analise também com profundidade o arquivo em anexo.
+Antes de responder e montar suas resposta com tais informações faça 3 análises da sua resposta bem como 3 revisões 
+de sua resposta para aumentar a qualidade da mesma e evitar não colocar algum detalhe relevante. Diga também se 
+podes executar a implementação direto, caso não, forneça as decisões que eu preciso tomar para que vc possa 
+executar tudo direto, as 4 etapas ou caso vc decida fazer por etapa. Idependente disto divida as atividades em tasks e 
+depois agupe no máximo 5 tasks em fases a menos que fique nuito grande. 
+A seguir o desafio:
+
+
+
+Faça 3 análises críticas de seu levantamento bem como 3 revisões do mesmo para aumentar a qualidade do levantamento e 
+evitar não colocar algum detalhe relevante. Crie também os relatórios do levantamento .docx e .md no diretório Analise criado por vc. 
+O espírito e as características são as mesmas dos relatórios em anexo incluindo o passo a passo da análise, os testes sugeridos bem 
+como o resultado dos mesmos e tudo mais que seja necessário para provar e também as evidências que seu levantamento foi realizada 
+com sucesso. Bem como a tabela de cada critério de aceite com o status "feito". 
+
+
+
+
+Blz então agora execute a implementação do desafio.
+Ao final faça 3 análises da sua implementação bem como 3 revisões de sua da mesma para aumentar a qualidade da mesma 
+e evitar não colocar algum detalhe relevante. 
+Crie rules, skill, arquivos .md e o que mais for necessário para que na implementação não seja mais necessário dimplementar 
+o desafio sem gastar token de entrada para isso. Crie scripts de MCP para as ferramentas que não possuir acesso para 
+construir os artefatos bem como fazer as revisões e testes  de validação e conformidade para entrega .Crie também os relatórios 
+de implementação .docx e .md no Diretório Docs. O espírito e as características são as mesmas dos relatórios anteriores 
+incluindo o passo a passo da implementação, apresentando; os testes bem como o resultado dos mesmos e tudo mais que 
+seja necessário para provar inclusive as evidências que a implementação foi realizada com sucesso. Bem como a tabela de 
+cada critério de aceite com o status "feito". Diga como posso testar para comprovar a resolução correta coloque o repositório 
+ao final do .docx.
+
+Entregáveis esperados ao final das 4 etapas:
+Documento de governança e composição do time de IA do Bytebank (planilha + texto).
+Diagrama de arquitetura RAG com fluxo completo e glossário técnico.
+Pipeline RAG funcional com dataset de políticas do banco, incluindo metadados e avaliação.
+Diagrama de arquitetura multiagente com roteamento, protocolos A2A/MCP, Human-in-the-Loop e README de portfólio.
+Envie sua solução pelo GitHub
+Checkpoint Especialista em IA - Nível 2
+Gere um Relatório de Correção com apoio de IA para analisar sua entrega, destacar pontos fortes, indicar pontos de atenção e orientar seus próximos estudos.
+Compartilhe o link da sua solução no GitHub. Para que a correção funcione sem problemas, deixe o repositório público ou garanta que ele possa ser acessado durante a análise.
+Link do projeto
+
+
+
+Gemini API Key Nivel 2
+[REMOVIDA — configure GOOGLE_API_KEY somente no arquivo .env local]
+
+
+
+Minha combinação recomendada:
+- Planejamento: GPT-5.6 Terra com esforço high; use Sol somente para arquitetura muito complexa.
+- Execução: GPT-5.6 Terra em medium; Luna para inventário, documentação mecânica e verificações repetitivas.
+- Revisão final: GPT-5.6 Sol em high, recebendo somente critérios, diff e resultados dos testes.
+
+
+
+
+
+
+

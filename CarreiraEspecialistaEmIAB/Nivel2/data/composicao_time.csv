@@ -1,8 +1,0 @@
-Cargo,Responsabilidades principais,Nível esperado,Relação com o projeto de agentes IA
-Engenheiro de dados,Ingerir validar versionar e disponibilizar políticas com qualidade,Pleno,Prepara o dataset e garante linhagem e atualização das fontes
-Analista de dados,Definir indicadores analisar consultas e acompanhar qualidade das respostas,Pleno,Transforma logs e avaliações em evidências para melhoria
-Cientista de dados,Projetar avaliação de relevância viés e desempenho dos modelos,Sênior,Define métricas testes de recuperação e análise de erros
-DPO,Orientar LGPD base legal acesso retenção e direitos dos titulares,Sênior,Garante privacidade governança e revisão de riscos do chatbot
-Engenheiro de IA,Construir RAG roteamento agentes observabilidade e guardrails,Sênior,Implementa a solução técnica e integra agentes protocolos e HITL
-Especialista de segurança,Modelar ameaças gerir segredos e revisar controles de acesso,Sênior,Protege dados bancários ferramentas MCP e trilhas de auditoria
-Product Manager de IA,Priorizar casos de uso critérios de aceite e comunicação com negócio,Sênior,Conecta o protótipo aos objetivos e limites operacionais do Bytebank

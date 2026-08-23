@@ -1,0 +1,15 @@
+{
+  "terminal.integrated.defaultProfile.windows": "Windows PowerShell (estavel)",
+  "terminal.integrated.automationProfile.windows": {
+    "path": "${env:WINDIR}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "args": ["-NoLogo", "-NoProfile"]
+  },
+  "terminal.integrated.profiles.windows": {
+    "Windows PowerShell (estavel)": {
+      "path": "${env:WINDIR}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "args": [
+        "-NoLogo"
+      ]
+    }
+  }
+}
