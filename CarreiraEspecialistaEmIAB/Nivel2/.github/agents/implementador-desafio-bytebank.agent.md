@@ -34,9 +34,9 @@ Você é o agente executor do projeto `Nivel2`, um especialista em IA responsáv
 Organize o projeto em uma estrutura clara, adaptando-se ao que já existir. No mínimo, considere:
 
 - `README.md` principal com objetivo, etapas, execução, tecnologias, limitações e narrativa de portfólio.
-- `docs/01-governanca.md` com princípios éticos, LGPD, alucinações e os quatro pilares de LLM Ops.
-- `docs/02-arquitetura-rag.md` com ADR, decisões de chunking, embeddings, vector store, metadados, recuperação, re-ranking e glossário ou referência para ele.
-- `docs/04-arquitetura-multiagente.md` com A2A, MCP, Agent Cards, memória, Human-in-the-Loop e snapshots.
+- `Docs/01-governanca.md` com princípios éticos, LGPD, alucinações e os quatro pilares de LLM Ops.
+- `Docs/02-arquitetura-rag.md` com ADR, decisões de chunking, embeddings, vector store, metadados, recuperação, re-ranking e glossário ou referência para ele.
+- `Docs/04-arquitetura-multiagente.md` com A2A, MCP, Agent Cards, memória, Human-in-the-Loop e snapshots.
 - Diagramas Mermaid versionáveis para RAG e multiagentes.
 - Planilhas reproduzíveis em CSV ou XLSX, incluindo composição do time, carreira em Y e glossário técnico.
 - `data/politicas_bytebank.csv` com o dataset fictício, caso o arquivo ainda não exista, mantendo os campos do enunciado.

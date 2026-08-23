@@ -8,10 +8,10 @@ Portfólio técnico do checkpoint Especialista em IA Nível 2: governança de IA
 
 | # | Entregável | Evidência principal | Status |
 |---|---|---|---|
-| 1 | Governança e composição do time | [Documento](docs/01-governanca.md), [CSV do time](data/composicao_time.csv), [carreira em Y](data/carreira_y.csv) e [planilha Google](https://docs.google.com/spreadsheets/d/1jJYN5SKQHZzNuuFBLDupMnQATMTfR3QBgl82MX-CJiE/edit?usp=sharing) | Concluído |
-| 2 | Arquitetura RAG e glossário | [ADR RAG](docs/02-arquitetura-rag.md), [diagrama editável](diagrams/rag.mmd), [SVG exportado](diagrams/rag.svg) e [glossário](data/glossario_rag.csv) | Concluído |
+| 1 | Governança e composição do time | [Documento](Docs/01-governanca.md), [CSV do time](data/composicao_time.csv), [carreira em Y](data/carreira_y.csv) e [planilha Google](https://docs.google.com/spreadsheets/d/1jJYN5SKQHZzNuuFBLDupMnQATMTfR3QBgl82MX-CJiE/edit?usp=sharing) | Concluído |
+| 2 | Arquitetura RAG e glossário | [ADR RAG](Docs/02-arquitetura-rag.md), [diagrama editável](diagrams/rag.mmd), [SVG exportado](diagrams/rag.svg) e [glossário](data/glossario_rag.csv) | Concluído |
 | 3 | Pipeline RAG funcional | [Código](src/rag_pipeline.py), [50 políticas](data/politicas_bytebank.csv), [avaliação](outputs/avaliacao_rag.csv) e [testes](tests/test_rag_pipeline.py) | Concluído |
-| 4 | Arquitetura multiagente e portfólio | [Documento](docs/04-arquitetura-multiagente.md), [SVG](diagrams/multiagente.svg), [grafo](src/multiagent_graph.py) e [servidor MCP](scripts/bytebank_mcp_server.py) | Concluído |
+| 4 | Arquitetura multiagente e portfólio | [Documento](Docs/04-arquitetura-multiagente.md), [SVG](diagrams/multiagente.svg), [grafo](src/multiagent_graph.py) e [servidor MCP](scripts/bytebank_mcp_server.py) | Concluído |
 
 ## Arquitetura RAG
 
@@ -70,13 +70,13 @@ O servidor stdio inicia com:
 .\scripts\start_bytebank_mcp.ps1
 ```
 
-Sem `BYTEBANK_CORE_API_BASE_URL` e `BYTEBANK_CORE_API_TOKEN`, leituras externas retornam `not_configured`. `criar_conta` e `solicitar_cartao` retornam `human_approval_required` enquanto `aprovado_por_humano` não for verdadeiro. Consulte [integrações MCP](docs/06-integracoes-mcp.md).
+Sem `BYTEBANK_CORE_API_BASE_URL` e `BYTEBANK_CORE_API_TOKEN`, leituras externas retornam `not_configured`. `criar_conta` e `solicitar_cartao` retornam `human_approval_required` enquanto `aprovado_por_humano` não for verdadeiro. Consulte [integrações MCP](Docs/06-integracoes-mcp.md).
 
 ## Estrutura
 
 - [`data/`](data/): políticas, time, carreira, glossário e Agent Cards.
 - [`diagrams/`](diagrams/): fontes Mermaid e exportações SVG.
-- [`docs/`](docs/): governança, arquitetura, avaliações, análises, revisões e relatórios.
+- [`Docs/`](Docs/): governança, arquitetura, avaliações, análises, revisões e relatórios.
 - [`src/`](src/): pipeline RAG, avaliação, integração Gemini, grafo e interface.
 - [`scripts/`](scripts/): setup, MCP, validação e geração dos DOCX.
 - [`tests/`](tests/): contratos de RAG, segurança, multiagente e MCP.
@@ -104,7 +104,9 @@ A arquitetura só é confiável quando avaliação, controle de acesso e trilha 
 
 - [GitHub Pages](https://fredjml.github.io/aluraCarreiraEspecialistaIANivel2B/)
 - [Planilha Google — Governança e RAG](https://docs.google.com/spreadsheets/d/1jJYN5SKQHZzNuuFBLDupMnQATMTfR3QBgl82MX-CJiE/edit?usp=sharing)
-- [Relatório de levantamento](docs/relatorio_levantamento_bytebank.md)
-- [Relatório de implementação](docs/relatorio_implementacao_bytebank.md)
+- Relatório de levantamento: [Markdown](Docs/relatorio_levantamento_bytebank.md) · [DOCX](Docs/relatorio_levantamento_bytebank.docx)
+- Relatório de implementação: [Markdown](Docs/relatorio_implementacao_bytebank.md) · [DOCX](Docs/relatorio_implementacao_bytebank.docx)
+- [PR #1 integrado à `main`](https://github.com/fredjml/aluraCarreiraEspecialistaIANivel2B/pull/1)
+- [Publicação do GitHub Pages concluída](https://github.com/fredjml/aluraCarreiraEspecialistaIANivel2B/actions/runs/32612667137)
 
-Limites: o dataset é fictício; o core bancário não foi fornecido; a rodada Gemini encontrou cota 429 e registrou os fallbacks; nenhum merge é feito automaticamente.
+Situação da entrega: os quatro entregáveis foram integrados à `main` pelo PR #1, e o portfólio foi publicado no GitHub Pages. Limites conhecidos: o dataset é fictício; o core bancário não foi fornecido; a rodada Gemini encontrou cota 429 e registrou os fallbacks.

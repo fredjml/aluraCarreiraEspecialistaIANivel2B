@@ -45,7 +45,7 @@ Construir um repositório reproduzível para o checkpoint Especialista em IA Ní
 ## Estado final desta execução
 
 - Fundação, arquitetura RAG, pipeline local, avaliação, multiagente e interface foram implementados.
-- Três análises e três revisões foram registradas em `docs/analises/` e `docs/revisoes/`.
-- Relatórios Markdown e DOCX foram gerados em `docs/` com evidências e critérios de aceite.
+- Três análises e três revisões foram registradas em `Docs/analises/` e `Docs/revisoes/`.
+- Relatórios Markdown e DOCX foram gerados em `Docs/` com evidências e critérios de aceite.
 - Scripts locais de MCP e conformidade foram executados com sucesso.
 - GitHub Pages, Google Sheets, APIs de LLM, Power BI e qualquer integração externa permanecem pendentes.

@@ -32,7 +32,7 @@ O LangGraph contém supervisor, agentes `conta_corrente`, `cartao_credito` e `su
 
 | ID | Evidência | Resultado |
 |---|---|---|
-| E1 | `docs/01-governanca.md` + planilha Google | concluído |
+| E1 | `Docs/01-governanca.md` + planilha Google | concluído |
 | E2 | `diagrams/rag.mmd` + `diagrams/rag.svg` + glossário | concluído |
 | E3 | `src/rag_pipeline.py` + Chroma + 50 políticas | concluído |
 | E4 | `outputs/avaliacao_rag.csv` | RAG 8/8; fallbacks 429 registrados |
